@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe</title>
+</head>
+<body>
+    <h1>Tic-Tac-Toe</h1>
+    <p>Current Player: {{ current_player }}</p>
+    <table border="1">
+        {% for row in board %}
+        <tr>
+            {% for cell in row %}
+            <td style="width: 50px; height: 50px; text-align: center;">
+                {{ cell }}
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+    
+    <button onclick="move('up')">Move Up</button>
+    <button onclick="move('down')">Move Down</button>
+    <button onclick="move('left')">Move Left</button>
+    <button onclick="move('right')">Move Right</button>
+    <button onclick="placeMarker()">Place Marker</button>
+
+    <script>
+        function move(direction) {
+            fetch('/move', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ direction: direction })
+            }).then(response => response.json()).then(data => {
+                location.reload();
+            });
+        }
+
+        function placeMarker() {
+            fetch('/place_marker', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            }).then(response => response.json()).then(data => {
+                if (data.status === 'game_over') {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    location.reload();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
