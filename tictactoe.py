@@ -1,6 +1,6 @@
 from flask import Flask, render_template, jsonify, request
 from sense_hat import SenseHat
-from displaypretty.py import displaypretty
+from displaypretty import prettydisplay
 
 app = Flask(__name__)
 sense = SenseHat()
@@ -26,19 +26,19 @@ stats = {
 # Display board on the Sense HAT
 def display_board():
     board = []
-    row = []
+    tempRow = []
     for row in range(3):
         for col in range(3):
             if [row, col] == cursor:
-                row.append("S")
+                tempRow.append("S")
             elif board[row][col] == 'X':
-                row.append("X")
+                tempRow.append("X")
             elif board[row][col] == 'O':
-                row.append("O")
+                tempRow.append("O")
             else:
-                row.append("E")
+                tempRow.append("E")
         board.append(row)
-    pixels = displaypretty(board)
+    pixels = prettydisplay(board)
     sense.set_pixels(pixels)
 
 # Check for a winner or a tie
