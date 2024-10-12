@@ -117,12 +117,10 @@ def get_slot(input_for_slot, end_slot_bool, end_row):
     return out_board
 def compile_lines_three(temp1_board, temp2_board, temp3_board):
     out_line = []
-    int_temp1 = 0
-    for item in temp1_board:
-        out_line.extend(item)
-        out_line.extend(temp2_board[int_temp1])
-        out_line.extend(temp3_board[int_temp1])
-        int_temp1 = int_temp1 + 1
+    for item in range(3):
+        out_line.extend(temp1_board[item])
+        out_line.extend(temp2_board[item])
+        out_line.extend(temp3_board[item])
     return out_line
 
 def prettydisplay(board):
@@ -147,4 +145,14 @@ def prettydisplay(board):
             temp1 = temp1 + 1
         out_board.extend(compile_lines_three(temp1_board, temp2_board, temp3_board))
         temp2 = temp2 + 1
+    if(out_board.__len__() != 64):
+        if(out_board.__len__()>64):
+            temp4 = out_board.__len__()-64
+            for item in range(temp4):
+                out_board.pop()
+        else:
+            temp4 = 64-out_board.__len__()
+            for item in range(temp4):
+                out_board.append(e)
+
     return out_board
