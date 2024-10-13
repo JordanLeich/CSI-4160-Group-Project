@@ -1,5 +1,6 @@
 from flask import Flask, render_template, jsonify, request
 from sense_hat import SenseHat
+from displaypretty import prettydisplay
 
 app = Flask(__name__)
 sense = SenseHat()
@@ -24,20 +25,21 @@ stats = {
 
 # Display board on the Sense HAT
 def display_board():
-    pixels = []
+    temp_board =[]
     for row in range(3):
+        temp_board2 = []
         for col in range(3):
             if [row, col] == cursor:
-                pixels.append(select_color)
+                temp_board2.append("S")
             elif board[row][col] == 'X':
-                pixels.append(X_color)
+                temp_board2.append("X")
             elif board[row][col] == 'O':
-                pixels.append(O_color)
+                temp_board2.append("O")
             else:
-                pixels.append(empty_color)
-        pixels.extend([empty_color] * 5)
-    for _ in range(5):
-        pixels.extend([empty_color] * 8)
+                temp_board2.append("E")
+        temp_board.append(temp_board2)
+        #print(temp_board)
+    pixels = prettydisplay(temp_board)
     sense.set_pixels(pixels)
 
 # Check for a winner or a tie
@@ -59,7 +61,6 @@ def check_winner():
     if all(board[row][col] != ' ' for row in range(3) for col in range(3)):
         return 'Tie'
     return None
-
 # Reset the game board
 def reset_game():
     global board, current_player, cursor
@@ -74,7 +75,7 @@ def move_cursor():
     global cursor
     data = request.get_json()
     direction = data['direction']
-    
+
     if direction == 'up':
         cursor[0] = (cursor[0] - 1) % 3
     elif direction == 'down':
@@ -83,7 +84,7 @@ def move_cursor():
         cursor[1] = (cursor[1] - 1) % 3
     elif direction == 'right':
         cursor[1] = (cursor[1] + 1) % 3
-    
+
     display_board()
     return jsonify({"status": "success"})
 
@@ -97,7 +98,7 @@ def place_marker_route():
         current_player = 'O' if current_player == 'X' else 'X'
         winner = check_winner()
         display_board()
-        
+
         if winner:
             if winner == 'X':
                 stats['X_wins'] += 1
@@ -105,11 +106,10 @@ def place_marker_route():
                 stats['O_wins'] += 1
             else:
                 stats['ties'] += 1
-            
+
             stats['games_played'] += 1
             reset_game()  # Reset the game after a win or tie
-            return jsonify({"status": "game_over", "message": f"{winner} wins!" if winner != 'Tie' else "It's a tie!", "stats": stats})
-    
+            return jsonify({"status": "game_over", "message": f"{winner} wins!" if winner != 'Tie' else "It's a tie"})
     return jsonify({"status": "success"})
 
 # Reset the game manually
