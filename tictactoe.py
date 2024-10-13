@@ -38,7 +38,7 @@ def display_board():
             else:
                 temp_board2.append("E")
         temp_board.append(temp_board2)
-        print(temp_board)
+        #print(temp_board)
     pixels = prettydisplay(temp_board)
     sense.set_pixels(pixels)
 
@@ -61,7 +61,6 @@ def check_winner():
     if all(board[row][col] != ' ' for row in range(3) for col in range(3)):
         return 'Tie'
     return None
-
 # Reset the game board
 def reset_game():
     global board, current_player, cursor
@@ -76,7 +75,7 @@ def move_cursor():
     global cursor
     data = request.get_json()
     direction = data['direction']
-    
+
     if direction == 'up':
         cursor[0] = (cursor[0] - 1) % 3
     elif direction == 'down':
@@ -85,7 +84,7 @@ def move_cursor():
         cursor[1] = (cursor[1] - 1) % 3
     elif direction == 'right':
         cursor[1] = (cursor[1] + 1) % 3
-    
+
     display_board()
     return jsonify({"status": "success"})
 
@@ -99,7 +98,7 @@ def place_marker_route():
         current_player = 'O' if current_player == 'X' else 'X'
         winner = check_winner()
         display_board()
-        
+
         if winner:
             if winner == 'X':
                 stats['X_wins'] += 1
@@ -107,11 +106,10 @@ def place_marker_route():
                 stats['O_wins'] += 1
             else:
                 stats['ties'] += 1
-            
+
             stats['games_played'] += 1
             reset_game()  # Reset the game after a win or tie
-            return jsonify({"status": "game_over", "message": f"{winner} wins!" if winner != 'Tie' else "It's a tie!", "stats": stats})
-    
+            return jsonify({"status": "game_over", "message": f"{winner} wins!" if winner != 'Tie' else "It's a tie"})
     return jsonify({"status": "success"})
 
 # Reset the game manually
