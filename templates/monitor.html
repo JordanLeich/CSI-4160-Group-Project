@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Monitor</title>
+</head>
+<body>
+    <h1>System Resource Monitor</h1>
+    
+    <h2>CPU, RAM, and Storage Usage</h2>
+    <div id="resources">
+        <p>Loading...</p>
+    </div>
+
+    <h2>Sense HAT Sensor Data</h2>
+    <div id="sensors">
+        <p>Loading...</p>
+    </div>
+
+    <h2>System Uptime</h2>
+    <div id="uptime">
+        <p>Loading...</p>
+    </div>
+
+    <script>
+        // Fetch system resources
+        function fetchResources() {
+            fetch('/monitor_resources')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('resources').innerHTML = `
+                    <p>CPU Usage: ${data.cpu_usage}%</p>
+                    <p>Memory Usage: ${data.memory_usage.percent}% (Used: ${data.memory_usage.used} / Total: ${data.memory_usage.total})</p>
+                    <p>Disk Usage: ${data.disk_usage.percent}% (Used: ${data.disk_usage.used} / Total: ${data.disk_usage.total})</p>
+                `;
+            });
+        }
+
+        // Fetch Sense HAT sensor data
+        function fetchSensors() {
+            fetch('/monitor_sensors')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('sensors').innerHTML = `
+                    <p>Temperature: ${data.temperature.toFixed(2)} °C</p>
+                    <p>Humidity: ${data.humidity.toFixed(2)}%</p>
+                    <p>Pressure: ${data.pressure.toFixed(2)} hPa</p>
+                `;
+            });
+        }
+
+        // Fetch system uptime
+        function fetchUptime() {
+            fetch('/uptime')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('uptime').innerHTML = `
+                    <p>Uptime: ${data.uptime_hours.toFixed(2)} hours (${data.uptime_seconds.toFixed(0)} seconds)</p>
+                `;
+            });
+        }
+
+        // Fetch all data when the page loads
+        window.onload = function() {
+            fetchResources();
+            fetchSensors();
+            fetchUptime();
+        };
+    </script>
+</body>
+</html>
