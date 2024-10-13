@@ -112,12 +112,19 @@ def get_slot(input_for_slot, end_slot_bool, end_row):
             case default:
                 outrow = [e,e,e]
                 out_board.append(outrow)
-                outrow = [e,e,e]
+                out_board.append(outrow)
                 out_board.append(outrow)
     return out_board
-def compile_lines_three(temp1_board, temp2_board, temp3_board):
+def compile_lines_three(temp1_board, temp2_board, temp3_board, rownum):
     out_line = []
-    for item in range(3):
+    toloopint = 3
+    if(rownum == 2):
+        toloopint = 2
+    #print("this row:")
+    #print(str(temp1_board))
+    #print(str(temp2_board))
+    #print(str(temp3_board))
+    for item in range(toloopint):
         out_line.extend(temp1_board[item])
         out_line.extend(temp2_board[item])
         out_line.extend(temp3_board[item])
@@ -128,23 +135,24 @@ def prettydisplay(board):
     temp1_board = []
     temp2_board = []
     temp3_board = []
-    temp1 = 0
     temp2 = 0
+    #print("thisboard:")
+    #print(str(board))
     for row in board:
-        for col in row:
+        for temp1 in range(3):
             booltemp1 = temp2 == 2
             match(temp1):
                 case 0:
-                    temp1_board = get_slot(col,False,booltemp1)
+                    temp1_board = get_slot(row[temp1],False,booltemp1)
                 case 1:
-                    temp1_board = get_slot(col,False,booltemp1)
+                    temp2_board = get_slot(row[temp1],False,booltemp1)
                 case 2:
-                    temp1_board = get_slot(col,True,booltemp1)
+                    temp3_board = get_slot(row[temp1],True,booltemp1)
                 case 3:
-                    print("error in display pretty code at prettydisplay, row :" + temp2 + ", unexpected temp1 value."  )
-            temp1 = temp1 + 1
-        out_board.extend(compile_lines_three(temp1_board, temp2_board, temp3_board))
+                    print("error in display pretty code at prettydisplay, row :" + str(temp2) + ", unexpected temp1")
+        out_board.extend(compile_lines_three(temp1_board, temp2_board, temp3_board,temp2))
         temp2 = temp2 + 1
+    '''
     if(out_board.__len__() != 64):
         if(out_board.__len__()>64):
             temp4 = out_board.__len__()-64
@@ -154,5 +162,6 @@ def prettydisplay(board):
             temp4 = 64-out_board.__len__()
             for item in range(temp4):
                 out_board.append(e)
-
+    '''
     return out_board
+

@@ -38,6 +38,7 @@ def display_board():
             else:
                 temp_board2.append("E")
         temp_board.append(temp_board2)
+        print(temp_board)
     pixels = prettydisplay(temp_board)
     sense.set_pixels(pixels)
 
