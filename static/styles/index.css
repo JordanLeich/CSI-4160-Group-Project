@@ -1,0 +1,49 @@
+.container {  display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: .2fr 45px 90px 1fr;
+    gap: 0px 0px;
+    grid-auto-flow: row;
+    grid-template-areas:
+      "g_header g_header g_header"
+      "winsx winso ties"
+      " g_stat  g_stat  g_stat"
+      "game_state game_state game_state";
+  }
+  
+  .TicTacToeinfo { grid-area: g_header; }
+  
+  .winso { grid-area: winso; }
+  
+  .winsx { grid-area: winsx; }
+  
+  .ties { grid-area: ties; }
+  
+  .game_state {  display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 60px 60px 60px;
+    gap: 0px 0px;
+    grid-auto-flow: row;
+    grid-template-areas:
+      "Game_area Game_area Game_area"
+      "resetgame move_up_button ."
+      "move_left select_pos move_right"
+      ". move_down .";
+    grid-area: game_state;
+  }
+  
+  .Game_area { grid-area: Game_area; }
+  
+  .move_up_button { grid-area: move_up_button; }
+  
+  .move_down { grid-area: move_down; }
+  
+  .move_right { grid-area: move_right; }
+  
+  .move_left { grid-area: move_left; }
+  
+  .select_pos { grid-area: select_pos; }
+  
+  .resetgame { grid-area: resetgame; }
+  
+  .gamestats\\\+resetbutton { grid-area:  g_stat; }
+  
