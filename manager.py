@@ -9,7 +9,20 @@ sense = SenseHat()
 # Serve the index page for the game
 @app.route('/')
 def index():
-    return render_template('index.html')
+    # Example default stats (you can modify these values or update dynamically)
+    stats = {
+        'Xwins': 0,          # Default value for X wins
+        'O_wins': 0,          # Default value for O wins
+        'ties': 0,            # Default value for ties
+        'games_played': 0     # Default value for games played
+    }
+
+    # Example current player and board (could be dynamic)
+    current_player = "X"
+    board = [["" for _ in range(3)] for _ in range(3)]  # Empty board (3x3)
+
+    # Pass the stats, current player, and board to the template
+    return render_template('index.html', current_player=current_player, stats=stats, board=board)
 
 # Serve the system monitor page
 @app.route('/monitor')
