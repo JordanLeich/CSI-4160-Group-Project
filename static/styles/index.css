@@ -1,4 +1,75 @@
-.container {  display: grid;
+:root{
+  --color_1:#230007;
+  --color_2:#D7CF07;
+  --color_3:#D98324;
+  --color_4:#A40606;
+  --color_5:#5A0002;
+  --Backround_color: var(--color_1);
+  --color_text:var(--color_2);
+  --color_accent:var(--color_4);
+  background: var(--Backround_color);
+  color: var(--color_text)
+}
+
+.text_class{
+  color: var(--color_text);
+
+}
+
+/* CSS https://getcssscan.com/css-buttons-examples */
+.button-17 {
+  appearance: none;
+  background-color: var(--Background_color);
+  border: 1px solid var(--color_accent);
+  border-radius: 6px;
+  box-shadow: var(--color_accent) 0 1px 0;
+  box-sizing: border-box;
+  color: var(--color_text);
+  cursor: pointer;
+  display: inline-block;
+  font-family: -apple-system,system-ui,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  padding: 6px 16px;
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.button-17:focus:not(:focus-visible):not(.focus-visible) {
+  box-shadow: none;
+  outline: none;
+}
+
+.button-17:hover {
+  background-color: var(--color_5);
+}
+
+.button-17:focus {
+  box-shadow: var(--color_5) 0 0 0 3px;
+  outline: none;
+}
+
+.button-17:disabled {
+  background-color: var(--color_3);
+  border-color: var(--color_accent);
+  color: rgba(255, 255, 255, .8);
+  cursor: default;
+}
+
+.button-17:active {
+  background-color: var(--Background_color);
+  box-shadow: rgba(20, 70, 32, .2) 0 1px 0 inset;
+}
+/*https://grid.layoutit.com/ */
+.container {  
+    display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     grid-template-rows: .2fr 45px 90px 1fr;
     gap: 0px 0px;
@@ -10,13 +81,21 @@
       "game_state game_state game_state";
   }
   
-  .TicTacToeinfo { grid-area: g_header; }
+  .TicTacToeinfo { 
+    grid-area: g_header; 
+  }
   
-  .winso { grid-area: winso; }
+  .winso { 
+    grid-area: winso; 
+  }
   
-  .winsx { grid-area: winsx; }
+  .winsx { 
+    grid-area: winsx; 
+  }
   
-  .ties { grid-area: ties; }
+  .ties { 
+    grid-area: ties; 
+  }
   
   .game_state {  display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -31,19 +110,35 @@
     grid-area: game_state;
   }
   
-  .Game_area { grid-area: Game_area; }
+  .Game_area { 
+    grid-area: Game_area;
+  }
   
-  .move_up_button { grid-area: move_up_button; }
+  .move_up_button { 
+    grid-area: move_up_button; 
+  }
   
-  .move_down { grid-area: move_down; }
+  .move_down { 
+    grid-area: move_down; 
+  }
   
-  .move_right { grid-area: move_right; }
+  .move_right { 
+    grid-area: move_right; 
+  }
   
-  .move_left { grid-area: move_left; }
+  .move_left { 
+    grid-area: move_left; 
+  }
   
-  .select_pos { grid-area: select_pos; }
+  .select_pos { 
+    grid-area: select_pos; 
+  }
   
-  .resetgame { grid-area: resetgame; }
+  .resetgame { 
+    grid-area: resetgame; 
+  }
   
-  .gamestats\\\+resetbutton { grid-area:  g_stat; }
+  .gamestats\\\+resetbutton { 
+    grid-area:  g_stat; 
+  }
   

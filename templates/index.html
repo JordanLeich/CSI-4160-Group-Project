@@ -27,7 +27,7 @@
         </div>
         <div class="gamestats\\\+resetbutton">
             <p>Games Played: <span id="games_played">{{ stats['games_played'] }}</span></p>
-            <button onclick="resetStats()">Reset Stats</button>
+            <button class="button-17"  onclick="resetStats()">Reset Stats</button>
         </div>
         <div class="game_state">
             <div class="Game_area">
@@ -47,22 +47,22 @@
 
             <!-- Movement and Game Control Buttons -->
             <div class="move_up_button">
-                <button onclick="move('up')">Move Up</button>
+                <button class="button-17"  onclick="move('up')">Move Up</button>
             </div>
             <div class="move_down"> 
-                <button onclick="move('down')">Move Down</button>
+                <button class="button-17"   onclick="move('down')">Move Down</button>
             </div>
             <div class="move_left">
-                <button onclick="move('left')">Move Left</button>
+                <button class="button-17" onclick="move('left')">Move Left</button>
             </div>
             <div class="move_right"> 
-                <button onclick="move('right')">Move Right</button>
+                <button class="button-17" onclick="move('right')">Move Right</button>
             </div>
             <div class="select_pos"> 
-                <button onclick="placeMarker()">Place Marker</button>
+                <button class="button-17" onclick="placeMarker()">Place Marker</button>
             </div>
                 <div class="resetgame">
-            <button onclick="resetGame()">Reset Game</button>
+            <button class="button-17" onclick="resetGame()">Reset Game</button>
             </div>
         </div>
         <script>
