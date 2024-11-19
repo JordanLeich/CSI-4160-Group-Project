@@ -128,12 +128,14 @@ def botMove(boardState):
 
             match difficultyNo:
                 case 0:  # Easy
-                    move = next((m for m in adjacent_moves[player_move] if m in [1, 3, 5, 7] and m in empty_positions), random.choice([i for i in [1, 3, 5, 7] if i in empty_positions]))
+                    move = next((m for m in adjacent_moves[player_move] if m in [1, 3, 5, 7] and m in empty_positions), 
+                                random.choice([i for i in [1, 3, 5, 7] if i in empty_positions]))
                     if player_move == 4:
                         move = botMove(boardState)
                 
                 case 1:  # Medium
-                    move = next((m for m in adjacent_moves[player_move] if m in [1, 3, 5, 7] and m in empty_positions), random.choice([i for i in [1, 3, 5, 7] if i in empty_positions]))
+                    move = next((m for m in adjacent_moves[player_move] if m in [1, 3, 5, 7] and m in empty_positions), 
+                                random.choice([i for i in [1, 3, 5, 7] if i in empty_positions]))
                     if player_move == 4:
                         move = botMove(boardState)
                 
