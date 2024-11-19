@@ -1,4 +1,5 @@
 import Stateofplayin
+import random
 '''
 first we need to get the user's preferred bot level, easy medium, or hard,
 easy will try to lose, taking the worst possable move at every oppertunity,
@@ -40,37 +41,126 @@ checking for win conditions:
     7 | 8 | 9  c
 a is 123, e is 258,h is 375, g is 159, for example
 '''
-def detectWinConditions(boolSelf):
-    #boolself is true if checking for chances for self to win and false for opponent checking, this should return a tuplet of the possable win locatons, and return it
-    winConLocations = []
-    return winConLocations
+def detectwin(thisboardstate, isBot):
+    #the boardstate is the state of play, isbot is the toggle to see if the bot is the one being checked
+    #the next move can land a win in one of the spots, return the index of that pos or position that would result in a win
+    player = 1 if isBot else 2 # Assign the marker based on who is being checked 
+    a = (0, 1, 2)
+    b = (3, 4, 5)
+    c = (6, 7, 8)
+    d = (0, 3, 6)
+    e = (1, 4, 7)
+    f = (2, 5, 8)
+    g = (0, 4, 8)
+    h = (2, 4, 6)
+    win_positions = [ a, b, c, # Rows 
+                     d, e, f, # Columns 
+                        g, h # Diagonals 
+                    ]
+    # Check each winning position 
+    for pos in win_positions: 
+        count_player = sum(thisboardstate[i] == player for i in pos) 
+        count_empty = sum(thisboardstate[i] == 0 for i in pos) 
+        
+        # If there are two markers of the player and one empty spot 
+        if count_player == 2 and count_empty == 1: 
+            for i in pos: 
+                if thisboardstate[i] == 0: 
+                    return i # Return the index of the winning move 
+        return -1 # Return -1 if no winning move is found
+
+
+
+
 
 def setupBoardStateNumbers(boardstate, boolSelfX):
-    #if boolSelfX is true, we are x else we are 0
-    thisboard = [0,0,0,
-                 0,0,0,
-                 0,0,0]
-    #bot is 1, 2 is player
-    if boolSelfX:
-        for no in range(1,9):
-            match boardstate[no]:
-                case "X":
-                    thisboard[no] = 1
-                case "O":
-                    thisboard[no] = 2
-                case defualt:
-                    #empty, we dont need to do something
-                    thisboard[no] = 0
-    else:
-        match boardstate[no]:
-                case "X":
-                    thisboard[no] = 2
-                case "O":
-                    thisboard[no] = 1
-                case defualt:
-                    #empty, we dont need to do something
-                    thisboard[no] = 0
-    return thisboard
+    return boardstate
+
+def botMove(boardState):
+    global turnNo, turnNoType, difficultyNo, firstmove
+    thisBoard = setupBoardStateNumbers(boardState, firstmove)
+    empty_positions = [i for i, val in enumerate(thisBoard) if val == 0]
+    move = -1
+    
+    match turnNoType:
+        case 0:
+            if difficultyNo in [0, 1]:  # Easy and Medium
+                move = random.choice([i for i in [1, 3, 5, 7] if i in empty_positions])
+            elif difficultyNo == 2:  # Hard
+                move = 4 if 4 in empty_positions else random.choice(empty_positions)
+        
+        case 1:
+            player_move = next((i for i, 
+                                val in enumerate(thisBoard) if val == 2), None)
+            adjacent_moves = {
+                0: [1, 3], 1: [0, 2, 4], 2: [1, 5],
+                3: [0, 4, 6], 4: [], 5: [2, 4, 8],
+                6: [3, 7], 7: [6, 8, 4], 8: [5, 7]
+            }
+
+            match difficultyNo:
+                case 0:  # Easy
+                    move = next((m for m in adjacent_moves[player_move] if m in [1, 3, 5, 7] and m in empty_positions), 
+                                random.choice([i for i in [1, 3, 5, 7] if i in empty_positions]))
+                    if player_move == 4:
+                        move = botMove(boardState)
+                
+                case 1:  # Medium
+                    move = next((m for m in adjacent_moves[player_move] if m in [1, 3, 5, 7] and m in empty_positions), 
+                                random.choice([i for i in [1, 3, 5, 7] if i in empty_positions]))
+                    if player_move == 4:
+                        move = botMove(boardState)
+                
+                case 2:  # Hard
+                    move = 4 if 4 in empty_positions else random.choice([i for i in [0, 2, 6, 8] if i in empty_positions])
+        
+        case 3:
+            # Logic for bot's win conditions
+            match difficultyNo:
+                case 0:  # Easy avoids win condition
+                    move = random.choice(empty_positions)
+                case 1:  # Medium logic
+                    # Implement medium logic
+                    pass
+                case 2:  # Hard will play win
+                    # Implement hard logic
+                    pass
+
+        case 4:
+            # Logic for player's win condition
+            match difficultyNo:
+                case 1 | 2:  # Medium and Hard will block win
+                    # Implement blocking logic
+                    pass
+                case 0:  # Easy avoids blocking win unless necessary
+                    move = random.choice(empty_positions)
+        
+        case 2:
+            match difficultyNo:
+                case 0:  # Easy follows simple priority
+                    priorities = [1, 3, 5, 7] + [0, 2, 6, 8] + [4]
+                case 1:  # Medium follows random edges, then corners, then center
+                    priorities = random.sample([1, 3, 5, 7], 4) + random.sample([0, 2, 6, 8], 4) + [4]
+                case 2:  # Hard follows specific strategy
+                    priorities = random.sample([0, 2, 6, 8], 4) + random.sample([1, 3, 5, 7], 4) + [4]
+            
+            for pos in priorities:
+                if pos in empty_positions:
+                    move = pos
+                    break
+    
+    return move
+
+# Example usage
+boardState = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+turnNoType = 0
+difficultyNo = 2
+turnNo = 0
+firstmove = True
+
+move = botMove(boardState)
+print(f"Bot move index: {move}")
+
 doomCounteronlocations = [-1, -1, -1,
                           -1, -1, -1,
                           -1, -1, -1] #this is for the medium bot
@@ -78,31 +168,6 @@ turnNoType= 0 #this is a selector for what type of turn this is
 difficultyNo = 0 # 0 is easy, 1 is medium, 2 is hard
 turnNo= 0 #this checks the BOT's move counter
 firstmove = False #this is to check if we(the bot) get the first move
-def botMove(boardState):
-    #see above  comment as string to get what is going on here 
-    thisBoard = setupBoardStateNumbers(boardstate=boardState, boolSelfX=firstmove)
-
-    match difficultyNo:
-        case 0:
-            match turnNoType:
-                case 0:
-
-                case default:
-        case 1:
-            match turnNoType:
-                case 0:
-
-                case default:
-
-        case 2:
-            match turnNoType:
-                case 0:
-
-                case default:
-
-        case default:
-            #throw error
-            print ("failure to set difficultyNo")
 def botStartup(difficulty, starting):
     #difficulty is one selected, turn order is firstmove and should be 1 or 2, depending on if bot is first or second:
     if (starting == 1):
@@ -138,3 +203,14 @@ def detectwin(thisboardstate, isBot):
                      d, e, f, # Columns 
                         g, h # Diagonals 
                     ]
+    # Check each winning position 
+    for pos in win_positions: 
+        count_player = sum(thisboardstate[i] == player for i in pos) 
+        count_empty = sum(thisboardstate[i] == 0 for i in pos) 
+        
+        # If there are two markers of the player and one empty spot 
+        if count_player == 2 and count_empty == 1: 
+            for i in pos: 
+                if thisboardstate[i] == 0: 
+                    return i # Return the index of the winning move 
+        return -1 # Return -1 if no winning move is found
