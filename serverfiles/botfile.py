@@ -22,7 +22,7 @@ if they get to a possable win condition:
         easy will avoid this at all costs,
         medium will play it if you had a turn to try to stop it(meaning if there are 2 possable wins, it will choose to avoid them until 2 of the player turns have passed)
         hard will play this on it's next available turn
-    if it is for the player's win:
+    if it is for the player's win(turntype = 4):
         easy will avoid it unless there are no other moves available,
         medium and hard will play it on it's next turn 
 if nither player will win in the subsequent turns(turntype = 2):
@@ -50,6 +50,7 @@ def setupBoardStateNumbers(boardstate, boolSelfX):
     thisboard = [0,0,0,
                  0,0,0,
                  0,0,0,]
+    #bot is 1, 2 is player
     if boolSelfX:
         for no in range(1,9):
             match boardstate[no]:
@@ -69,6 +70,7 @@ def setupBoardStateNumbers(boardstate, boolSelfX):
                 case defualt:
                     #empty, we dont need to do something
                     thisboard[no] = 0
+    return thisboard
 
 turnNoType= 0 #this is a selector for what type of turn this is
 difficultyNo = 0 # 0 is easy, 1 is medium, 2 is hard
@@ -76,7 +78,29 @@ turnNo= 0 #this checks the BOT's move counter
 firstmove = False #this is to check if we(the bot) get the first move
 def botMove(boardState):
     #see above  comment as string to get what is going on here 
-    thisBoard = 
+    thisBoard = setupBoardStateNumbers(boardstate=boardState, boolSelfX=firstmove)
+
+    match difficultyNo:
+        case 0:
+            match turnNoType:
+                case 0:
+
+                case default:
+        case 1:
+            match turnNoType:
+                case 0:
+
+                case default:
+
+        case 2:
+            match turnNoType:
+                case 0:
+
+                case default:
+
+        case default:
+            #throw error
+            print ("failure to set difficultyNo")
 def botStartup(difficulty, starting):
     #difficulty is one selected, turn order is firstmove and should be 1 or 2, depending on if bot is first or second:
     if (starting == 1):
@@ -93,3 +117,5 @@ def botStartup(difficulty, starting):
         #player goes first, must wait for player move
         dummy = 0
     return
+def detectwin(thisboardstate, isBot):
+    #the boardstate is the state of play, isbot checks to see if the bot is the one being checked
