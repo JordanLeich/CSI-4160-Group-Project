@@ -18,3 +18,7 @@ def sendBotMove(intToSend):
 def returnBoardState():
     #returns the state of the board. as of current
     return boardstate
+def clearBoard():
+    #clears the board
+    boardstate = ["E", "E", "E", "E", "E", "E", "E", "E", "E"]
+    return
