@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href = "../static/styles/index.css">
+    <link rel="stylesheet" type="text/css" href="../static/styles/index.css">
+    <script src="../static/scripts/script.js" defer></script> <!-- Link to the new script -->
     <title>Tic-Tac-Toe</title>
 </head>
 <body>
@@ -12,26 +13,23 @@
             <h1>Tic-Tac-Toe</h1>
             <p>Current Player: {{ current_player }}</p>
         
-            <!-- Game statistics -->
-        
             <h2>Game Stats:</h2>
         </div>
         <div class="winsx">
             <p>X Wins: <span id="x_wins">{{ stats['X_wins'] }}</span></p>
         </div>
-        <div class="winso">
-            <p>O Wins: <span id="o_wins">{{ stats['O_wins'] }}</span></p>
+        <div class="winsai">
+            <p>AI Wins: <span id="ai_wins">{{ stats['AI_wins'] }}</span></p>
         </div>
         <div class="ties">
             <p>Ties: <span id="ties">{{ stats['ties'] }}</span></p>
         </div>
         <div class="gamestats\\\+resetbutton">
             <p>Games Played: <span id="games_played">{{ stats['games_played'] }}</span></p>
-            <button class="button-17"  onclick="resetStats()">Reset Stats</button>
+            <button class="button-17" onclick="resetStats()">Reset Stats</button>
         </div>
         <div class="game_state">
             <div class="Game_area">
-            <!-- Game board display -->
                 <table border="1">
                     {% for row in board %}
                     <tr>
@@ -45,12 +43,11 @@
                 </table>
             </div>
 
-            <!-- Movement and Game Control Buttons -->
             <div class="move_up_button">
-                <button class="button-17"  onclick="move('up')">Move Up</button>
+                <button class="button-17" onclick="move('up')">Move Up</button>
             </div>
             <div class="move_down"> 
-                <button class="button-17"   onclick="move('down')">Move Down</button>
+                <button class="button-17" onclick="move('down')">Move Down</button>
             </div>
             <div class="move_left">
                 <button class="button-17" onclick="move('left')">Move Left</button>
@@ -61,71 +58,10 @@
             <div class="select_pos"> 
                 <button class="button-17" onclick="placeMarker()">Place Marker</button>
             </div>
-                <div class="resetgame">
-            <button class="button-17" onclick="resetGame()">Reset Game</button>
+            <div class="resetgame">
+                <button class="button-17" onclick="resetGame()">Reset Game</button>
             </div>
         </div>
-        <script>
-            function move(direction) {
-                fetch('/move', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ direction: direction })
-                }).then(response => response.json()).then(data => {
-                    location.reload();
-                });
-            }
-
-            function placeMarker() {
-                fetch('/place_marker', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                }).then(response => response.json()).then(data => {
-                    if (data.status === 'game_over') {
-                        alert(data.message);
-                        updateStats(data.stats);  // Update stats on game over
-                        location.reload();
-                    } else {
-                        location.reload();
-                    }
-                });
-            }
-
-            function resetGame() {
-                fetch('/reset_game', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                }).then(response => response.json()).then(data => {
-                    if (data.status === 'game_reset') {
-                        location.reload();  // Reload the page to reset the game
-                    }
-                });
-            }
-
-            function resetStats() {
-                fetch('/reset_stats', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                }).then(response => response.json()).then(data => {
-                    updateStats(data.stats);
-                });
-            }
-
-            function updateStats(stats) {
-                document.getElementById('x_wins').innerText = stats.X_wins;
-                document.getElementById('o_wins').innerText = stats.O_wins;
-                document.getElementById('ties').innerText = stats.ties;
-                document.getElementById('games_played').innerText = stats.games_played;
-            }
-        </script>
     </div>
 </body>
-</html>   
+</html>
