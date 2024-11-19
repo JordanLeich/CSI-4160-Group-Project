@@ -32,13 +32,13 @@ if nither player will win in the subsequent turns(turntype = 2):
 
 sidenote: we may be able to reuse the win condition checker to evaluate potential win conditions.
 checking for win conditions:
- h a   b   c d
-   1 | 2 | 3 e
-  ---+---+---
-   4 | 5 | 6 f
-  ---+---+---
-   7 | 8 | 9 g
-a is 147, e is 123,d is 375, h is 159, for example
+ g  d   e   f  h
+    1 | 2 | 3  a
+   ---+---+---
+    4 | 5 | 6  b
+   ---+---+---
+    7 | 8 | 9  c
+a is 123, e is 258,h is 375, g is 159, for example
 '''
 def detectWinConditions(boolSelf):
     #boolself is true if checking for chances for self to win and false for opponent checking, this should return a tuplet of the possable win locatons, and return it
@@ -49,7 +49,7 @@ def setupBoardStateNumbers(boardstate, boolSelfX):
     #if boolSelfX is true, we are x else we are 0
     thisboard = [0,0,0,
                  0,0,0,
-                 0,0,0,]
+                 0,0,0]
     #bot is 1, 2 is player
     if boolSelfX:
         for no in range(1,9):
@@ -71,7 +71,9 @@ def setupBoardStateNumbers(boardstate, boolSelfX):
                     #empty, we dont need to do something
                     thisboard[no] = 0
     return thisboard
-
+doomCounteronlocations = [-1, -1, -1,
+                          -1, -1, -1,
+                          -1, -1, -1] #this is for the medium bot
 turnNoType= 0 #this is a selector for what type of turn this is
 difficultyNo = 0 # 0 is easy, 1 is medium, 2 is hard
 turnNo= 0 #this checks the BOT's move counter
@@ -116,6 +118,23 @@ def botStartup(difficulty, starting):
     else:
         #player goes first, must wait for player move
         dummy = 0
+    doomCounteronlocations = [-1, -1, -1,
+                              -1, -1, -1,
+                              -1, -1, -1] #this is for the medium bot
     return
 def detectwin(thisboardstate, isBot):
-    #the boardstate is the state of play, isbot checks to see if the bot is the one being checked
+    #the boardstate is the state of play, isbot is the toggle to see if the bot is the one being checked
+    #the next move can land a win in one of the spots, return the index of that pos or position that would result in a win
+    player = 1 if isBot else 2 # Assign the marker based on who is being checked 
+    a = (0, 1, 2)
+    b = (3, 4, 5)
+    c = (6, 7, 8)
+    d = (0, 3, 6)
+    e = (1, 4, 7)
+    f = (2, 5, 8)
+    g = (0, 4, 8)
+    h = (2, 4, 6)
+    win_positions = [ a, b, c, # Rows 
+                     d, e, f, # Columns 
+                        g, h # Diagonals 
+                    ]
