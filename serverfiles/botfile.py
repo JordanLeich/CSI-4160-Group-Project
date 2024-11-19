@@ -44,12 +44,39 @@ def detectWinConditions(boolSelf):
     #boolself is true if checking for chances for self to win and false for opponent checking, this should return a tuplet of the possable win locatons, and return it
     winConLocations = []
     return winConLocations
+
+def setupBoardStateNumbers(boardstate, boolSelfX):
+    #if boolSelfX is true, we are x else we are 0
+    thisboard = [0,0,0,
+                 0,0,0,
+                 0,0,0,]
+    if boolSelfX:
+        for no in range(1,9):
+            match boardstate[no]:
+                case "X":
+                    thisboard[no] = 1
+                case "O":
+                    thisboard[no] = 2
+                case defualt:
+                    #empty, we dont need to do something
+                    thisboard[no] = 0
+    else:
+        match boardstate[no]:
+                case "X":
+                    thisboard[no] = 2
+                case "O":
+                    thisboard[no] = 1
+                case defualt:
+                    #empty, we dont need to do something
+                    thisboard[no] = 0
+
 turnNoType= 0 #this is a selector for what type of turn this is
 difficultyNo = 0 # 0 is easy, 1 is medium, 2 is hard
 turnNo= 0 #this checks the BOT's move counter
 firstmove = False #this is to check if we(the bot) get the first move
 def botMove(boardState):
     #see above  comment as string to get what is going on here 
+    thisBoard = 
 def botStartup(difficulty, starting):
     #difficulty is one selected, turn order is firstmove and should be 1 or 2, depending on if bot is first or second:
     if (starting == 1):
@@ -59,4 +86,10 @@ def botStartup(difficulty, starting):
     turnNoType = 0
     difficultyNo = difficulty
     turnNo = 1
-    
+    if firstmove:
+        #we move first
+        botMove(Stateofplayin.returnBoardState)
+    else:
+        #player goes first, must wait for player move
+        dummy = 0
+    return

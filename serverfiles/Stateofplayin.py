@@ -8,9 +8,13 @@ bot output from file will be sent according to the following grid:
 ---+---+---
  7 | 8 | 9
 board cell # holds X, O or E (empty)
-boardstate = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+boardstate =    [1, 2, 3, 
+                 4, 5, 6, 
+                 7, 8, 9]
 """
-boardstate = ["E", "E", "E", "E", "E", "E", "E", "E", "E"]
+boardstate = ["E", "E", "E",
+              "E", "E", "E", 
+              "E", "E", "E"]
 def sendBotMove(intToSend):
     #this should send the int that the bot is selecting on it's turn
     #the return should let us know the boardstate after that 
@@ -20,5 +24,7 @@ def returnBoardState():
     return boardstate
 def clearBoard():
     #clears the board
-    boardstate = ["E", "E", "E", "E", "E", "E", "E", "E", "E"]
+    boardstate = ["E", "E", "E", 
+                  "E", "E", "E", 
+                  "E", "E", "E"]
     return
