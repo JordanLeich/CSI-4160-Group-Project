@@ -1,6 +1,9 @@
-import Stateofplayin
+import socket 
+import json 
 import random
-import logging
+import Stateofplayin 
+import logging 
+from Stateofplayin import sendBotMove, returnBoardState, clearBoard, listenForPlayerMove
 
 logging.basicConfig(level=logging.INFO)
 '''
@@ -187,3 +190,23 @@ def detectwin(thisboardstate, isBot):
                 if thisboardstate[i] == 0: 
                     return i # Return the index of the winning move 
         return -1 # Return -1 if no winning move is found
+def main(): 
+    clearBoard() 
+    bot_first = False # Toggle whether the bot goes first 
+    game_over = False 
+    while not game_over: 
+        if bot_first: 
+            boardState = returnBoardState() 
+            botMoveIndex = botMove(boardState) 
+            boardState = sendBotMove(botMoveIndex - 1) 
+            print(f"Bot moved to position: {botMoveIndex}") 
+            bot_first = False 
+        else: 
+            boardState = listenForPlayerMove() 
+            print(f"Player moved. Current board state: {boardState}") 
+            bot_first = True 
+            # Add logic to check for game over conditions (win/draw) 
+            # # If the game is over, set game_over = True 
+
+if __name__ == "__main__": 
+    main()
