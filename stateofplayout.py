@@ -1,9 +1,9 @@
 from google.cloud import pubsub_v1
 import json
-import Stateofplayin
+import serverfiles.Stateofplayin
 
 # Set GCP Project ID and topic
-PROJECT_ID = "your-project-id"
+PROJECT_ID = "class-project-442120"
 TOPIC_ID = "tic-tac-toe"
 SUBSCRIPTION_ID = "pi-subscriber"
 
