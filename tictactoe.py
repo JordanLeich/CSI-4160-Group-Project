@@ -1,9 +1,7 @@
-from flask import Flask, render_template, jsonify, request
+import requests
+import jsonify
 from sense_hat import SenseHat
 from displaypretty import prettydisplay
-import random
-
-app = Flask(__name__)
 sense = SenseHat()
 
 # Define colors
@@ -16,6 +14,7 @@ select_color = [0, 255, 0]  # Green for selected cell
 board = [[' ', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' ']]
 current_player = 'X'
 cursor = [0, 0]
+difficulty = 0  # Default difficulty level (0 = easy, 1 = medium, 2 = hard)
 
 # Game statistics
 stats = {
@@ -32,11 +31,6 @@ def reset_game():
     current_player = 'X'
     cursor = [0, 0]
     display_board()
-
-@app.route('/reset_game', methods=['POST'])
-def reset_game_route():
-    reset_game()
-    return jsonify({"status": "game_reset", "message": "Board has been reset"})
 
 def display_board():
     temp_board = []
@@ -56,10 +50,25 @@ def display_board():
     sense.set_pixels(pixels)
 
 def cpu_move():
-    empty_cells = [(row, col) for row in range(3) for col in range(3) if board[row][col] == ' ']
-    if empty_cells:
-        row, col = random.choice(empty_cells)
-        board[row][col] = 'O'  
+    global board, difficulty
+    board_state = [cell for row in board for cell in row]
+
+    # Send the board state to the GCP bot and get the move
+    url = "http://<GCP_SERVER_ADDRESS>/get_bot_move"  # Replace with your GCP server address
+    payload = {
+        "board_state": board_state,
+        "difficulty": difficulty
+    }
+    response = requests.post(url, json=payload)
+    response_data = response.json()
+
+    # Get the bot's move from the response
+    botMoveIndex = response_data["bot_move"]
+    row, col = divmod(botMoveIndex, 3)
+    
+    # Update the board with the bot's move
+    if board[row][col] == ' ':
+        board[row][col] = 'O'
         display_board()
 
 def check_winner():
@@ -76,6 +85,21 @@ def check_winner():
     if all(board[row][col] != ' ' for row in range(3) for col in range(3)):
         return 'Tie'
     return None
+
+@app.route('/set_difficulty', methods=['POST'])
+def set_difficulty():
+    global difficulty
+    data = request.get_json()
+    difficulty = data['difficulty']
+    return jsonify({"status": "success", "message": f"Difficulty set to {difficulty}"})
+
+@app.route('/reset_stats', methods=['POST'])
+def reset_stats():
+    stats['X_wins'] = 0
+    stats['O_wins'] = 0
+    stats['ties'] = 0
+    stats['games_played'] = 0
+    return jsonify({"status": "success", "stats": stats})
 
 @app.route('/move', methods=['POST'])
 def move_cursor():
@@ -135,14 +159,6 @@ def place_marker_route():
         current_player = 'X'
 
     return jsonify({"status": "success"})
-
-@app.route('/reset_stats', methods=['POST'])
-def reset_stats():
-    stats['X_wins'] = 0
-    stats['O_wins'] = 0
-    stats['ties'] = 0
-    stats['games_played'] = 0
-    return jsonify({"status": "success", "stats": stats})
 
 @app.route('/')
 def index():
