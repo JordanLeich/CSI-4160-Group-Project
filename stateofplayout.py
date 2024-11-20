@@ -1,6 +1,8 @@
 from google.cloud import pubsub_v1
 import json
-import serverfiles.Stateofplayin
+
+from serverfiles import Stateofplayin
+
 
 # Set GCP Project ID and topic
 PROJECT_ID = "class-project-442120"
