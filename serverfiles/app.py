@@ -1,6 +1,6 @@
                                                     
 from flask import Flask, request, jsonify
-from bot import botMove  # Import the botMove function from your bot script
+from botfile import botMove  # Import the botMove function from your bot script
 
 app = Flask(__name__)
 
