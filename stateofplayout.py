@@ -1,58 +1,62 @@
-import socket
+from google.cloud import pubsub_v1
 import json
 import Stateofplayin
 
-HOST = "0.0.0.0"  # Listen on all available interfaces
-PORT = 65432      # Port to listen on
+# Set GCP Project ID and topic
+PROJECT_ID = "your-project-id"
+TOPIC_ID = "tic-tac-toe"
+SUBSCRIPTION_ID = "pi-subscriber"
 
-def handle_bot_communication():
-    """
-    Handles incoming requests from the bot, updates the board state, and responds to player moves.
-    """
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
-        server_socket.bind((HOST, PORT))
-        server_socket.listen()
-        print(f"Server listening on {HOST}:{PORT}...")
+def publish_message(topic_id, message):
+    """Publishes a message to a Pub/Sub topic."""
+    publisher = pubsub_v1.PublisherClient()
+    topic_path = publisher.topic_path(PROJECT_ID, topic_id)
+
+    # Convert message to JSON
+    message_data = json.dumps(message).encode("utf-8")
+    future = publisher.publish(topic_path, message_data)
+    print(f"Published message ID: {future.result()}")
+
+def listen_for_messages():
+    """Listens for messages on a Pub/Sub subscription."""
+    subscriber = pubsub_v1.SubscriberClient()
+    subscription_path = subscriber.subscription_path(PROJECT_ID, SUBSCRIPTION_ID)
+
+    def callback(message):
+        try:
+            print(f"Received message: {message.data}")
+            data = json.loads(message.data.decode("utf-8"))
+            
+            if "playerMove" in data:
+                player_move = data["playerMove"]
+                Stateofplayin.listenForPlayerMove()
+                print(f"Player moved at index: {player_move}")
+                board_state = Stateofplayin.returnBoardState()
+                publish_message(TOPIC_ID, {"boardState": board_state})
+            elif "botMove" in data:
+                bot_move = data["botMove"]
+                Stateofplayin.sendBotMove(bot_move)
+                print(f"Bot moved at index: {bot_move}")
+                publish_message(TOPIC_ID, {"status": "Bot move processed"})
+            elif "clearBoard" in data:
+                Stateofplayin.clearBoard()
+                print("Board cleared.")
+                publish_message(TOPIC_ID, {"status": "Board cleared"})
+            else:
+                print("Unknown command received.")
+                publish_message(TOPIC_ID, {"error": "Unknown command"})
+            message.ack()
+        except Exception as e:
+            print(f"Error handling message: {e}")
+            message.nack()
+            
+    subscriber.subscribe(subscription_path, callback=callback)
+    print(f"Listening for messages on {SUBSCRIPTION_ID}...")
+    try:
         while True:
-            conn, addr = server_socket.accept()
-            print(f"Connection established with {addr}")
-            with conn:
-                try:
-                    data = conn.recv(1024) # Receive the incoming JSON data
-                    if not data:
-                        break
-                    message = json.loads(data.decode())
-                    print(f"Received message: {message}")
-                    # Process the message based on its type
-                    if "playerMove" in message:
-                        player_move = message["playerMove"]
-                        Stateofplayin.listenForPlayerMove()  # Update the board state
-                        print(f"Player moved at index: {player_move}")
-                        # Respond with the updated board state
-                        board_state = Stateofplayin.returnBoardState()
-                        response = {"boardState": board_state}
-                        conn.sendall(json.dumps(response).encode())
-                    elif "botMove" in message:
-                        bot_move = message["botMove"]
-                        Stateofplayin.sendBotMove(bot_move)  # Update the board state
-                        print(f"Bot moved at index: {bot_move}")
-                        response = {"status": "Bot move processed"}
-                        conn.sendall(json.dumps(response).encode())
-                    elif "clearBoard" in message:
-                        Stateofplayin.clearBoard()
-                        print("Board cleared.")
-                        response = {"status": "Board cleared"}
-                        conn.sendall(json.dumps(response).encode())
-                    else:
-                        print("Unknown command received.")
-                        response = {"error": "Unknown command"}
-                        conn.sendall(json.dumps(response).encode())
-                except json.JSONDecodeError as e:
-                    print(f"Error decoding JSON: {e}")
-                    conn.sendall(json.dumps({"error": "Invalid JSON format"}).encode())
-                except Exception as e:
-                    print(f"Error: {e}")
-                    conn.sendall(json.dumps({"error": str(e)}).encode())
+            pass
+    except KeyboardInterrupt:
+        print("Stopped listening for messages.")
 
 if __name__ == "__main__":
-    handle_bot_communication()
+    listen_for_messages()
