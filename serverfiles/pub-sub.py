@@ -1,10 +1,10 @@
 from google.cloud import pubsub_v1
 import json
 import logging
-from bot import botMove
+from botfile import botMove
 
 # Set GCP Project ID and topic
-PROJECT_ID = "your-project-id"
+PROJECT_ID = "class-project-442120"
 SUBSCRIPTION_ID = "player-moves"
 RESPONSE_TOPIC_ID = "bot-moves"
 
