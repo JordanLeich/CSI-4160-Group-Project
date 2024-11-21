@@ -1,5 +1,6 @@
 from sense_hat import SenseHat
 from displaypretty import prettydisplay
+from stateofplayout import *
 # app.py
 from flask import Flask, render_template,jsonify, request
 app = Flask(__name__)
@@ -65,11 +66,16 @@ def cpu_move():
                 gamestate[tempint] = item
             tempint += 1
     upload_board_state(gamestate)
-    gamestate = download_board_state()
+    prevgamestate = gamestate
+    while (prevgamestate==gamestate):
+        gamestate = download_board_state()
     tempint = 0
-    for i in range(2):
+    for i in range(3):
         templist = board[i]
-        for j in range(2):
+        for j in range(3):
+            spotTemp = gamestate[tempint]
+            if (spotTemp == 'E'):
+                gamestate[tempint] = ' '
             templist[j] = gamestate[tempint]
             tempint += 1
         board[i] = templist
