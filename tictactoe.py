@@ -1,8 +1,9 @@
-import requests
-import jsonify
 from sense_hat import SenseHat
 from displaypretty import prettydisplay
-from serverfiles import app
+# app.py
+from flask import Flask, render_template,jsonify, request
+app = Flask(__name__)
+# Define your routes and views here
 sense = SenseHat()
 
 # Define colors
@@ -52,25 +53,27 @@ def display_board():
 
 def cpu_move():
     global board, difficulty
-    board_state = [cell for row in board for cell in row]
-
-    # Send the board state to the GCP bot and get the move
-    url = "http://<GCP_SERVER_ADDRESS>/get_bot_move"  # Replace with your GCP server address
-    payload = {
-        "board_state": board_state,
-        "difficulty": difficulty
-    }
-    response = requests.post(url, json=payload)
-    response_data = response.json()
-
-    # Get the bot's move from the response
-    botMoveIndex = response_data["bot_move"]
-    row, col = divmod(botMoveIndex, 3)
-    
-    # Update the board with the bot's move
-    if board[row][col] == ' ':
-        board[row][col] = 'O'
-        display_board()
+    gamestate = ['','','',
+                 '','','',
+                 '','','']
+    tempint = 0
+    for list in board:
+        for item in list:
+            if(item == ' '):
+                gamestate[tempint] = 'E'
+            else:
+                gamestate[tempint] = item
+            tempint += 1
+    upload_board_state(gamestate)
+    gamestate = download_board_state()
+    tempint = 0
+    for i in range(2):
+        templist = board[i]
+        for j in range(2):
+            templist[j] = gamestate[tempint]
+            tempint += 1
+        board[i] = templist
+    #now we have the cpu's move, next we return
 
 def check_winner():
     for row in board:
@@ -168,3 +171,4 @@ def index():
 if __name__ == '__main__':
     reset_game()
     app.run(host='0.0.0.0', port=5000)
+
