@@ -1,64 +1,79 @@
-from google.cloud import pubsub_v1
 import json
+import logging
+from google.cloud import storage
+from google.oauth2 import service_account
 
-from serverfiles import Stateofplayin
+# Set up logging for debugging
+logging.basicConfig(level=logging.INFO)
 
+# Path to your service account key file for Google Cloud Storage
+KEY_PATH = "/home/jordan/Downloads/CSI-4160-Group-Project-main/key.json"  # Replace with your actual path
 
-# Set GCP Project ID and topic
-PROJECT_ID = "class-project-442120"
-TOPIC_ID = "tic-tac-toe"
-SUBSCRIPTION_ID = "pi-subscriber"
+# The name of the Google Cloud Storage bucket
+BUCKET_NAME = "my-game-board-state-bucket"  # Replace with your actual bucket name
 
-def publish_message(topic_id, message):
-    """Publishes a message to a Pub/Sub topic."""
-    publisher = pubsub_v1.PublisherClient()
-    topic_path = publisher.topic_path(PROJECT_ID, topic_id)
+# File name in the bucket where the game state is stored
+GAME_STATE_FILE = "game_state.json"
 
-    # Convert message to JSON
-    message_data = json.dumps(message).encode("utf-8")
-    future = publisher.publish(topic_path, message_data)
-    print(f"Published message ID: {future.result()}")
+# Initialize Google Cloud Storage client with credentials
+def initialize_storage_client():
+    credentials = service_account.Credentials.from_service_account_file(KEY_PATH)
+    client = storage.Client(credentials=credentials, project=credentials.project_id)
+    return client
 
-def listen_for_messages():
-    """Listens for messages on a Pub/Sub subscription."""
-    subscriber = pubsub_v1.SubscriberClient()
-    subscription_path = subscriber.subscription_path(PROJECT_ID, SUBSCRIPTION_ID)
+# Function to upload the current board state to Google Cloud Storage
+def upload_board_state(board_state):
+    client = initialize_storage_client()
+    bucket = client.get_bucket(BUCKET_NAME)
+    blob = bucket.blob(GAME_STATE_FILE)
 
-    def callback(message):
-        try:
-            print(f"Received message: {message.data}")
-            data = json.loads(message.data.decode("utf-8"))
-            
-            if "playerMove" in data:
-                player_move = data["playerMove"]
-                Stateofplayin.listenForPlayerMove()
-                print(f"Player moved at index: {player_move}")
-                board_state = Stateofplayin.returnBoardState()
-                publish_message(TOPIC_ID, {"boardState": board_state})
-            elif "botMove" in data:
-                bot_move = data["botMove"]
-                Stateofplayin.sendBotMove(bot_move)
-                print(f"Bot moved at index: {bot_move}")
-                publish_message(TOPIC_ID, {"status": "Bot move processed"})
-            elif "clearBoard" in data:
-                Stateofplayin.clearBoard()
-                print("Board cleared.")
-                publish_message(TOPIC_ID, {"status": "Board cleared"})
-            else:
-                print("Unknown command received.")
-                publish_message(TOPIC_ID, {"error": "Unknown command"})
-            message.ack()
-        except Exception as e:
-            print(f"Error handling message: {e}")
-            message.nack()
-            
-    subscriber.subscribe(subscription_path, callback=callback)
-    print(f"Listening for messages on {SUBSCRIPTION_ID}...")
+    # Prepare the board state data to upload
+    board_data = json.dumps({"boardState": board_state})
+
+    # Upload the data to the bucket
+    blob.upload_from_string(board_data)
+    logging.info("Board state uploaded successfully.")
+
+# Function to download the board state from Google Cloud Storage
+def download_board_state():
+    client = initialize_storage_client()
+    bucket = client.get_bucket(BUCKET_NAME)
+    blob = bucket.blob(GAME_STATE_FILE)
+
     try:
-        while True:
-            pass
-    except KeyboardInterrupt:
-        print("Stopped listening for messages.")
+        # Download the data from the bucket
+        board_data = blob.download_as_text()
+        board_state = json.loads(board_data)["boardState"]
+        logging.info("Board state downloaded successfully.")
+        return board_state
+    except Exception as e:
+        logging.error(f"Error downloading board state: {e}")
+        return None
 
+# Function to send the updated board state to Google Cloud Storage
+def send_updated_board_state(board_state):
+    logging.info("Sending updated board state to Google Cloud Storage.")
+    upload_board_state(board_state)
+
+# Function to handle the communication process
+def handle_game_state(board_state):
+    # Save the updated board state to GCS
+    send_updated_board_state(board_state)
+
+    # Get the current board state from GCS
+    current_board_state = download_board_state()
+    if current_board_state is not None:
+        logging.info(f"Current board state: {current_board_state}")
+    else:
+        logging.warning("Failed to retrieve current board state.")
+    
+    return current_board_state
+
+# Main logic for handling incoming and outgoing game state
 if __name__ == "__main__":
-    listen_for_messages()
+    # Example: Assume 'board_state' is coming from your game logic
+    # Initialize a board state with some example values
+    board_state = ["X", "O", "E", "E", "X", "E", "O", "E", "E"]
+
+    # Handle the game state: save and retrieve from Google Cloud Storage
+    handle_game_state(board_state)
