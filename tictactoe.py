@@ -2,6 +2,7 @@ import requests
 import jsonify
 from sense_hat import SenseHat
 from displaypretty import prettydisplay
+from serverfiles import app
 sense = SenseHat()
 
 # Define colors
