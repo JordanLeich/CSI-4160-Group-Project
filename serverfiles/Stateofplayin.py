@@ -6,13 +6,16 @@ import time
 boardstate = ["E"] * 9
 difficulty = 0
 turnCount = 0
+turntype = 0
 doomCounteronlocations = [-1, -1, -1,
                           -1, -1, -1,
                           -1, -1, -1]
 currentdump = json.dumps({"boardState": boardstate,
                              "turnCounter": turnCount,
                              "difficulty": difficulty,
-                             "damiclies":doomCounteronlocations})
+                             "damiclies":doomCounteronlocations,
+                             "turnstile": turntype})
+
 
 prevDump = currentdump
 def returnBoardState():
@@ -25,17 +28,32 @@ def clearBoard():
 
 def listenForPlayerMove():
     global difficulty, turnCount, boardstate, doomCounteronlocations, currentdump, prevDump
-    prevdump = currentdump
+    currentdump
     currentdump = download_board_state()
-    while (currentdump == prevdump ):
+    tempboardstate = json.loads(currentdump)["boardState"]
+    tempturnCount = json.loads(currentdump)["turnCounter"]
+    tempdifficulty = json.loads(currentdump)["difficulty"]
+    tempdoomCounteronlocations = json.loads(currentdump)["damiclies"]
+    while ((boardstate == tempboardstate) 
+           and (tempdifficulty == difficulty) 
+           and (tempturnCount == turnCount) 
+           and (tempdoomCounteronlocations == doomCounteronlocations)):
+
         currentdump = download_board_state()
+        tempboardstate = json.loads(currentdump)["boardState"]
+        tempturnCount = json.loads(currentdump)["turnCounter"]
+        tempdifficulty = json.loads(currentdump)["difficulty"]
+        tempdoomCounteronlocations = json.loads(currentdump)["damiclies"]
         time.sleep(50)
+
     boardstate = json.loads(currentdump)["boardState"]
     turnCount = json.loads(currentdump)["turnCounter"]
     difficulty = json.loads(currentdump)["difficulty"]
     doomCounteronlocations = json.loads(currentdump)["damiclies"]
-    return boardstate, turnCount, difficulty, doomCounteronlocations
-def sendBotMove(botMoveIndex,board_State, turnNo, difficultyNo, doomCounter_onlocations):
+    turntype = json.loads(currentdump)["turnstile"]
+    return boardstate, turnCount, difficulty, doomCounteronlocations, turntype
+
+def sendBotMove(botMoveIndex,board_State, turnNo, difficultyNo, doomCounter_onlocations, turntype):
     global boardstate, turnCount, difficulty, doomCounteronlocations, currentdump
     doomCounteronlocations = doomCounter_onlocations
     difficulty = difficultyNo
@@ -43,7 +61,7 @@ def sendBotMove(botMoveIndex,board_State, turnNo, difficultyNo, doomCounter_onlo
     boardstate = board_State
     current_player = 'O'
     boardstate[botMoveIndex] = current_player
-    upload_board_state(boardstate, turnCount,difficulty)
+    upload_board_state(boardstate, turnCount,difficulty,turntype)
 
 
 # Set up logging for debugging
@@ -65,7 +83,7 @@ def initialize_storage_client():
     return client
 
 # Function to upload the current board state to Google Cloud Storage
-def upload_board_state(board_state, turnCounter, bottype):
+def upload_board_state(board_state, turnCounter, bottype, turntype):
     global doomCounteronlocations
     client = initialize_storage_client()
     bucket = client.get_bucket(BUCKET_NAME)
@@ -75,7 +93,8 @@ def upload_board_state(board_state, turnCounter, bottype):
     board_data = json.dumps({"boardState": board_state,
                              "turnCounter": turnCounter,
                              "difficulty": bottype,
-                              "damiclies":doomCounteronlocations})
+                              "damiclies":doomCounteronlocations,
+                              "turnstile": turntype})
 
     # Upload the data to the bucket
     blob.upload_from_string(board_data)
@@ -116,8 +135,7 @@ def handle_game_state(board_state):
     
     return current_board_state
 
-currentdump = download_board_state()
-prevDump = currentdump
+
 
 # Main logic for handling incoming and outgoing game state
 if __name__ == "__main__":

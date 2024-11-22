@@ -5,6 +5,7 @@ from google.oauth2 import service_account
 doomCnt = [-1, -1, -1,
                           -1, -1, -1,
                           -1, -1, -1]
+turnType = 1 #because bot never goes first
 # Set up logging for debugging
 logging.basicConfig(level=logging.INFO)
 
@@ -25,7 +26,7 @@ def initialize_storage_client():
 
 # Function to upload the current board state to Google Cloud Storage
 def upload_board_state(board_state, turnCounter, bottype):
-    global doomCnt
+    global doomCnt, turnType
     client = initialize_storage_client()
     bucket = client.get_bucket(BUCKET_NAME)
     blob = bucket.blob(GAME_STATE_FILE)
@@ -34,7 +35,8 @@ def upload_board_state(board_state, turnCounter, bottype):
     board_data = json.dumps({"boardState": board_state,
                              "turnCounter": turnCounter,
                              "difficulty": bottype,
-                              "damiclies":doomCnt})
+                              "damiclies":doomCnt,
+                              "turnstile": turnType})
 
     # Upload the data to the bucket
     blob.upload_from_string(board_data)
@@ -42,7 +44,7 @@ def upload_board_state(board_state, turnCounter, bottype):
 
 # Function to download the board state from Google Cloud Storage
 def download_board_state():
-    global doomCnt
+    global doomCnt, turnType
     client = initialize_storage_client()
     bucket = client.get_bucket(BUCKET_NAME)
     blob = bucket.blob(GAME_STATE_FILE)
@@ -53,6 +55,7 @@ def download_board_state():
         board_state = json.loads(board_data)["boardState"]
         turnCount = json.loads(board_data)["turnCounter"]
         doomCnt = json.loads(board_data)["damiclies"]
+        turnType = json.loads(board_data)["turnstile"]
         logging.info("Board state downloaded successfully.")
         return board_state, turnCount
     except Exception as e:

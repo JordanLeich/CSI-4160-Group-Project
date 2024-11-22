@@ -145,6 +145,7 @@ def botMove(boardState):
     return move + 1 if move != -1 else move
 
 def botStartup(difficulty, starting):
+    global turnNoType, difficultyNo, turnNo, doomCounteronlocations
     #difficulty is one selected, turn order is firstmove and should be 1 or 2, depending on if bot is first or second:
     if (starting == 1):
         firstmove = True
@@ -191,7 +192,7 @@ def detectwin(thisboardstate, isBot):
                     return i # Return the index of the winning move 
         return -1 # Return -1 if no winning move is found
 def main(): 
-    global board_state, turnNo,difficultyNo,doomCounteronlocations
+    global board_state, turnNo,difficultyNo,doomCounteronlocations, turnNoType
     clearBoard() 
     bot_first = False # Toggle whether the bot goes first 
     game_over = False 
@@ -199,11 +200,11 @@ def main():
         if bot_first: 
             boardState = returnBoardState() 
             botMoveIndex = botMove(boardState) 
-            boardState = sendBotMove(botMoveIndex-1,boardState, turnNo, difficultyNo, doomCounteronlocations) 
+            boardState = sendBotMove(botMoveIndex-1,boardState, turnNo, difficultyNo, doomCounteronlocations, turnNoType) 
             print(f"Bot moved to position: {botMoveIndex}") 
             bot_first = False 
         else: 
-            boardState, turnNo, difficultyNo, doomCounteronlocations = listenForPlayerMove() 
+            boardState, turnNo, difficultyNo, doomCounteronlocations, turnNoType = listenForPlayerMove() 
             print(f"Player moved. Current board state: {boardState}") 
             bot_first = True 
             # Add logic to check for game over conditions (win/draw) 
