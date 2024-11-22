@@ -30,10 +30,10 @@ stats = {
 }
 @app.route('/reset_game', methods=['POST'])
 def reset_game():
-    global board, current_player, cursor
+    global board, current_player, cursor,turnCounter
     board = [[' ', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' ']]
     current_player = 'X'
-    
+    turnCounter = 0
     cursor = [0, 0]
     display_board()
 

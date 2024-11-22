@@ -45,8 +45,8 @@ function resetGame() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-        }, 
-        body: JSON.stringify({ "resetGame": "resetGame" })
+        },
+         body: JSON.stringify({ "resetGame": "resetGame" })
     }).then(response => response.json()).then(data => {
         if (data.status === 'game_reset') {
             location.reload();  // Reload the page to reset the game
