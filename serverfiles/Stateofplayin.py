@@ -1,17 +1,18 @@
-import socket
 import json
-
+import logging
+from google.cloud import storage
+from google.oauth2 import service_account
+import time
 boardstate = ["E"] * 9
-
-def sendBotMove(intToSend):
-    global boardstate
-    boardstate[intToSend] = "O"
-    HOST = "RPI_IP"  # Replace with the Pi's IP address
-    PORT = 65432
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((HOST, PORT))
-        s.sendall(json.dumps({"botMove": intToSend}).encode())
-    return boardstate
+difficulty = 0
+turnCount = 0
+doomCounteronlocations = [-1, -1, -1,
+                          -1, -1, -1,
+                          -1, -1, -1]
+currentdump = json.dumps({"boardState": boardstate,
+                             "turnCounter": turnCount,
+                             "difficulty": difficulty,
+                             "damiclies":doomCounteronlocations})
 
 def returnBoardState():
     global boardstate
@@ -22,18 +23,102 @@ def clearBoard():
     boardstate = ["E"] * 9
 
 def listenForPlayerMove():
-    # Assuming Pi sends JSON containing {"playerMove": index}
-    HOST = "0.0.0.0"  # Listen on all available interfaces
-    PORT = 65432       # Arbitrary port
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind((HOST, PORT))
-        s.listen()
-        print("Waiting for player move...")
-        conn, addr = s.accept()
-        with conn:
-            print(f"Connected by {addr}")
-            data = conn.recv(1024)
-            if data:
-                move = json.loads(data.decode())["playerMove"]
-                boardstate[move] = "X"
-                return boardstate
+    global difficulty, turnCount, boardstate, doomCounteronlocations, currentdump
+    prevdump = currentdump
+    while (currentdump == prevdump ):
+        currentdump = download_board_state()
+        time.sleep(1)
+    boardstate = json.loads(currentdump)["boardState"]
+    turnCount = json.loads(currentdump)["turnCounter"]
+    difficulty = json.loads(currentdump)["difficulty"]
+    doomCounteronlocations = json.loads(currentdump)["damiclies"]
+    return boardstate, turnCount, difficulty, doomCounteronlocations
+def sendBotMove(botMoveIndex,board_State, turnNo, difficultyNo, doomCounter_onlocations):
+    global boardstate, turnCount, difficulty, doomCounteronlocations, currentdump
+    doomCounteronlocations = doomCounter_onlocations
+    difficulty = difficultyNo
+    turnCount = turnNo
+    boardstate = board_State
+    current_player = 'O'
+    boardstate[botMoveIndex] = current_player
+    upload_board_state(boardstate, turnCount,difficulty)
+
+
+# Set up logging for debugging
+logging.basicConfig(level=logging.INFO)
+
+# Path to your service account key file for Google Cloud Storage
+KEY_PATH = "/home/jordan/Downloads/CSI-4160-Group-Project-main/key.json"  # Replace with your actual path
+
+# The name of the Google Cloud Storage bucket
+BUCKET_NAME = "my-game-board-state-bucket"  # Replace with your actual bucket name
+
+# File name in the bucket where the game state is stored
+GAME_STATE_FILE = "game_state.json"
+
+# Initialize Google Cloud Storage client with credentials
+def initialize_storage_client():
+    credentials = service_account.Credentials.from_service_account_file(KEY_PATH)
+    client = storage.Client(credentials=credentials, project=credentials.project_id)
+    return client
+
+# Function to upload the current board state to Google Cloud Storage
+def upload_board_state(board_state, turnCounter, bottype):
+    global doomCnt
+    client = initialize_storage_client()
+    bucket = client.get_bucket(BUCKET_NAME)
+    blob = bucket.blob(GAME_STATE_FILE)
+
+    # Prepare the board state data to upload
+    board_data = json.dumps({"boardState": board_state,
+                             "turnCounter": turnCounter,
+                             "difficulty": bottype,
+                              "damiclies":doomCnt})
+
+    # Upload the data to the bucket
+    blob.upload_from_string(board_data)
+    logging.info("Board state uploaded successfully.")
+
+# Function to download the board state from Google Cloud Storage
+def download_board_state():
+    client = initialize_storage_client()
+    bucket = client.get_bucket(BUCKET_NAME)
+    blob = bucket.blob(GAME_STATE_FILE)
+
+    try:
+        # Download the data from the bucket
+        board_data = blob.download_as_text()
+
+        logging.info("Board state downloaded successfully.")
+        return board_data
+    except Exception as e:
+        logging.error(f"Error downloading board state: {e}")
+        return None
+
+# Function to send the updated board state to Google Cloud Storage
+def send_updated_board_state(board_state):
+    logging.info("Sending updated board state to Google Cloud Storage.")
+    upload_board_state(board_state)
+
+# Function to handle the communication process
+def handle_game_state(board_state):
+    # Save the updated board state to GCS
+    send_updated_board_state(board_state)
+
+    # Get the current board state from GCS
+    current_board_state = download_board_state()
+    if current_board_state is not None:
+        logging.info(f"Current board state: {current_board_state}")
+    else:
+        logging.warning("Failed to retrieve current board state.")
+    
+    return current_board_state
+
+# Main logic for handling incoming and outgoing game state
+if __name__ == "__main__":
+    # Example: Assume 'board_state' is coming from your game logic
+    # Initialize a board state with some example values
+    board_state = ["X", "O", "E", "E", "X", "E", "O", "E", "E"]
+
+    # Handle the game state: save and retrieve from Google Cloud Storage
+    handle_game_state(board_state)

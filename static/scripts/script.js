@@ -9,7 +9,17 @@ function move(direction) {
         location.reload();
     });
 }
-
+function set_difficulty(num) {
+    fetch('/set_difficulty', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ num: num })
+    }).then(response => response.json()).then(data => {
+        location.reload();
+    });
+}
 function placeMarker() {
     fetch('/place_marker', {
         method: 'POST',

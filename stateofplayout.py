@@ -2,7 +2,9 @@ import json
 import logging
 from google.cloud import storage
 from google.oauth2 import service_account
-
+doomCnt = [-1, -1, -1,
+                          -1, -1, -1,
+                          -1, -1, -1]
 # Set up logging for debugging
 logging.basicConfig(level=logging.INFO)
 
@@ -22,13 +24,17 @@ def initialize_storage_client():
     return client
 
 # Function to upload the current board state to Google Cloud Storage
-def upload_board_state(board_state):
+def upload_board_state(board_state, turnCounter, bottype):
+    global doomCnt
     client = initialize_storage_client()
     bucket = client.get_bucket(BUCKET_NAME)
     blob = bucket.blob(GAME_STATE_FILE)
 
     # Prepare the board state data to upload
-    board_data = json.dumps({"boardState": board_state})
+    board_data = json.dumps({"boardState": board_state,
+                             "turnCounter": turnCounter,
+                             "difficulty": bottype,
+                              "damiclies":doomCnt})
 
     # Upload the data to the bucket
     blob.upload_from_string(board_data)
@@ -36,6 +42,7 @@ def upload_board_state(board_state):
 
 # Function to download the board state from Google Cloud Storage
 def download_board_state():
+    global doomCnt
     client = initialize_storage_client()
     bucket = client.get_bucket(BUCKET_NAME)
     blob = bucket.blob(GAME_STATE_FILE)
@@ -44,8 +51,10 @@ def download_board_state():
         # Download the data from the bucket
         board_data = blob.download_as_text()
         board_state = json.loads(board_data)["boardState"]
+        turnCount = json.loads(board_data)["turnCounter"]
+        doomCnt = json.loads(board_data)["damiclies"]
         logging.info("Board state downloaded successfully.")
-        return board_state
+        return board_state, turnCount
     except Exception as e:
         logging.error(f"Error downloading board state: {e}")
         return None

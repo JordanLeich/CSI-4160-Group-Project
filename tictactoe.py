@@ -2,6 +2,7 @@ from sense_hat import SenseHat
 from displaypretty import prettydisplay
 from stateofplayout import *
 # app.py
+import time
 from flask import Flask, render_template,jsonify, request
 app = Flask(__name__)
 # Define your routes and views here
@@ -12,13 +13,13 @@ X_color = [255, 0, 0]    # Red for X player
 O_color = [0, 0, 255]    # Blue for O player
 empty_color = [0, 0, 0]  # Black for empty cells
 select_color = [0, 255, 0]  # Green for selected cell
-
+doomcounter = []
 # Initial game state
 board = [[' ', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' ']]
 current_player = 'X'
 cursor = [0, 0]
 difficulty = 0  # Default difficulty level (0 = easy, 1 = medium, 2 = hard)
-
+turnCounter = 0
 # Game statistics
 stats = {
     "X_wins": 0,
@@ -32,6 +33,7 @@ def reset_game():
     global board, current_player, cursor
     board = [[' ', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' ']]
     current_player = 'X'
+    
     cursor = [0, 0]
     display_board()
 
@@ -53,7 +55,7 @@ def display_board():
     sense.set_pixels(pixels)
 
 def cpu_move():
-    global board, difficulty
+    global board, difficulty, turnCounter
     gamestate = ['','','',
                  '','','',
                  '','','']
@@ -65,10 +67,12 @@ def cpu_move():
             else:
                 gamestate[tempint] = item
             tempint += 1
-    upload_board_state(gamestate)
+    upload_board_state(gamestate, turnCounter, difficulty)
     prevgamestate = gamestate
+    time.sleep(10)
     while (prevgamestate==gamestate):
-        gamestate = download_board_state()
+        gamestate, turnCounter = download_board_state()
+        time.sleep(5)
     tempint = 0
     for i in range(3):
         templist = board[i]
@@ -97,10 +101,10 @@ def check_winner():
     return None
 
 @app.route('/set_difficulty', methods=['POST'])
-def set_difficulty():
+def set_difficulty(difficultyno):
     global difficulty
     data = request.get_json()
-    difficulty = data['difficulty']
+    difficulty = difficultyno
     return jsonify({"status": "success", "message": f"Difficulty set to {difficulty}"})
 
 @app.route('/reset_stats', methods=['POST'])
@@ -133,7 +137,7 @@ def move_cursor():
 def place_marker_route():
     global current_player
     row, col = cursor
-
+    turnCounter += 1
     if board[row][col] == ' ' and current_player == 'X':
         board[row][col] = current_player
         display_board()
