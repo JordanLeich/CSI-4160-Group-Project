@@ -28,7 +28,7 @@ stats = {
     "ties": 0,
     "games_played": 0
 }
-
+@app.route('/reset_game', methods=['POST'])
 def reset_game():
     global board, current_player, cursor
     board = [[' ', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' ']]

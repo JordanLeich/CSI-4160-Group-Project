@@ -44,7 +44,7 @@ def listenForPlayerMove():
         tempturnCount = json.loads(currentdump)["turnCounter"]
         tempdifficulty = json.loads(currentdump)["difficulty"]
         tempdoomCounteronlocations = json.loads(currentdump)["damiclies"]
-        time.sleep(20)
+        time.sleep(20) 
 
     boardstate = json.loads(currentdump)["boardState"]
     turnCount = json.loads(currentdump)["turnCounter"]
