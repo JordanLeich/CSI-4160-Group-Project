@@ -72,8 +72,9 @@ def cpu_move():
     time.sleep(10)
     while (prevgamestate==gamestate):
         gamestate, turnCounter = download_board_state()
-        time.sleep(5)
+        time.sleep(10)
     tempint = 0
+    turnCounter += 1
     for i in range(3):
         templist = board[i]
         for j in range(3):
@@ -101,10 +102,10 @@ def check_winner():
     return None
 
 @app.route('/set_difficulty', methods=['POST'])
-def set_difficulty(difficultyno):
+def set_difficulty():
     global difficulty
     data = request.get_json()
-    difficulty = data['difficulty']
+    difficulty = int(data['difficulty'])
     return jsonify({"status": "success", "message": f"Difficulty set to {difficulty}"})
 
 @app.route('/reset_stats', methods=['POST'])

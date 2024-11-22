@@ -5,7 +5,7 @@ from google.oauth2 import service_account
 doomCnt = [-1, -1, -1,
                           -1, -1, -1,
                           -1, -1, -1]
-turnType = 1 #because bot never goes first
+turnType = 2 #because bot never goes first
 # Set up logging for debugging
 logging.basicConfig(level=logging.INFO)
 

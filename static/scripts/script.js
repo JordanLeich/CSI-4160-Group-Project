@@ -9,7 +9,7 @@ function move(direction) {
         location.reload();
     });
 }
-function set_difficulty(difficulty) {
+function set_difficulty() {
     fetch('/set_difficulty', {
         method: 'POST',
         headers: {
