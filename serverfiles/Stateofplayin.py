@@ -14,6 +14,7 @@ currentdump = json.dumps({"boardState": boardstate,
                              "difficulty": difficulty,
                              "damiclies":doomCounteronlocations})
 
+prevDump = currentdump
 def returnBoardState():
     global boardstate
     return boardstate
@@ -23,11 +24,12 @@ def clearBoard():
     boardstate = ["E"] * 9
 
 def listenForPlayerMove():
-    global difficulty, turnCount, boardstate, doomCounteronlocations, currentdump
+    global difficulty, turnCount, boardstate, doomCounteronlocations, currentdump, prevDump
     prevdump = currentdump
+    currentdump = download_board_state()
     while (currentdump == prevdump ):
         currentdump = download_board_state()
-        time.sleep(1)
+        time.sleep(50)
     boardstate = json.loads(currentdump)["boardState"]
     turnCount = json.loads(currentdump)["turnCounter"]
     difficulty = json.loads(currentdump)["difficulty"]
@@ -64,7 +66,7 @@ def initialize_storage_client():
 
 # Function to upload the current board state to Google Cloud Storage
 def upload_board_state(board_state, turnCounter, bottype):
-    global doomCnt
+    global doomCounteronlocations
     client = initialize_storage_client()
     bucket = client.get_bucket(BUCKET_NAME)
     blob = bucket.blob(GAME_STATE_FILE)
@@ -73,7 +75,7 @@ def upload_board_state(board_state, turnCounter, bottype):
     board_data = json.dumps({"boardState": board_state,
                              "turnCounter": turnCounter,
                              "difficulty": bottype,
-                              "damiclies":doomCnt})
+                              "damiclies":doomCounteronlocations})
 
     # Upload the data to the bucket
     blob.upload_from_string(board_data)
@@ -113,6 +115,9 @@ def handle_game_state(board_state):
         logging.warning("Failed to retrieve current board state.")
     
     return current_board_state
+
+currentdump = download_board_state()
+prevDump = currentdump
 
 # Main logic for handling incoming and outgoing game state
 if __name__ == "__main__":
