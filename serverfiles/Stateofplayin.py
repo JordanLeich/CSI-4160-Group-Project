@@ -38,13 +38,13 @@ def listenForPlayerMove():
            and (tempdifficulty == difficulty) 
            and (tempturnCount == turnCount) 
            and (tempdoomCounteronlocations == doomCounteronlocations)):
-
+        time.sleep(20) 
         currentdump = download_board_state()
         tempboardstate = json.loads(currentdump)["boardState"]
         tempturnCount = json.loads(currentdump)["turnCounter"]
         tempdifficulty = json.loads(currentdump)["difficulty"]
         tempdoomCounteronlocations = json.loads(currentdump)["damiclies"]
-        time.sleep(20) 
+        
 
     boardstate = json.loads(currentdump)["boardState"]
     turnCount = json.loads(currentdump)["turnCounter"]

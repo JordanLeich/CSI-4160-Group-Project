@@ -9,7 +9,7 @@ function move(direction) {
         location.reload();
     });
 }
-function set_difficulty() {
+function set_difficulty(difficulty) {
     fetch('/set_difficulty', {
         method: 'POST',
         headers: {
@@ -45,7 +45,8 @@ function resetGame() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-        }
+        }, 
+        body: JSON.stringify({ "resetGame": "resetGame" })
     }).then(response => response.json()).then(data => {
         if (data.status === 'game_reset') {
             location.reload();  // Reload the page to reset the game
