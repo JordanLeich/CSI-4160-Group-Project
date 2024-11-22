@@ -135,7 +135,7 @@ def move_cursor():
 
 @app.route('/place_marker', methods=['POST'])
 def place_marker_route():
-    global current_player
+    global current_player, turnCounter
     row, col = cursor
     turnCounter += 1
     if board[row][col] == ' ' and current_player == 'X':
