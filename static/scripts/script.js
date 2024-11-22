@@ -9,13 +9,13 @@ function move(direction) {
         location.reload();
     });
 }
-function set_difficulty(num) {
+function set_difficulty(difficulty) {
     fetch('/set_difficulty', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ num: num })
+        body: JSON.stringify({ difficulty: difficulty })
     }).then(response => response.json()).then(data => {
         location.reload();
     });

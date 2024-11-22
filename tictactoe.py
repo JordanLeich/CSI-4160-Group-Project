@@ -13,7 +13,7 @@ X_color = [255, 0, 0]    # Red for X player
 O_color = [0, 0, 255]    # Blue for O player
 empty_color = [0, 0, 0]  # Black for empty cells
 select_color = [0, 255, 0]  # Green for selected cell
-doomcounter = []
+doomcounter =[]
 # Initial game state
 board = [[' ', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' ']]
 current_player = 'X'
@@ -104,7 +104,7 @@ def check_winner():
 def set_difficulty(difficultyno):
     global difficulty
     data = request.get_json()
-    difficulty = difficultyno
+    difficulty = data['difficulty']
     return jsonify({"status": "success", "message": f"Difficulty set to {difficulty}"})
 
 @app.route('/reset_stats', methods=['POST'])
