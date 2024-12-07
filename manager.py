@@ -2,9 +2,80 @@ from flask import Flask, render_template, jsonify
 import psutil
 from sense_hat import SenseHat
 import time
+import mysql.connector
+import threading
+
 
 app = Flask(__name__)
 sense = SenseHat()
+
+DB_CONFIG = {
+    'user': 'root',
+    'password': 'csi4160project',
+    'host': '34.27.202.36', #public IP from your cloud SQL instance on GCP
+    'database': 'sensorvals'
+}
+
+def get_uptime_for_sql():
+    #Format for mysql database in "hh:mm:ss"
+    with open('/proc/uptime', 'r') as f:
+        uptime_seconds = int(float(f.readline().split()[0]))
+    hours = uptime_seconds // 3600
+    minutes = (uptime_seconds % 3600) // 60
+    seconds = uptime_seconds % 60
+    return f"{hours:02}:{minutes:02}:{seconds:02}"
+
+#Function to upload sensor data to Cloud SQL
+def upload_to_cloud_sql():
+    print("Thread started...") #Test to see if function is running
+    while True:
+        try:
+            print("Reading sensor data...")  # Check if this prints
+            #Read sensor data
+            cpu = psutil.cpu_percent(interval=1)
+            print(f"CPU: {cpu}")  #Testing purposes
+            memory = psutil.virtual_memory().percent
+            print(f"Memory: {memory}")#Testing purposes
+            disk = psutil.disk_usage('/').percent
+            print(f"Disk: {disk}")#Testing purposes
+            temperature = sense.get_temperature()
+            print(f"Temperature: {temperature}")#Testing purposes
+            humidity = sense.get_humidity()
+            print(f"Humidity: {humidity}")#Testing purposes
+            pressure = sense.get_pressure()
+            print(f"Pressure: {pressure}")#Testing purposes
+            uptime =  get_uptime_for_sql()
+            print(f"Uptime: {uptime}")#Testing purposes
+            
+
+            #Connect to the Cloud SQL database
+            #Test database connection
+            print("Attempting to connect to Cloud SQL...")
+            conn = mysql.connector.connect(**DB_CONFIG)
+            print("Connected to Cloud SQL")
+
+            cursor = conn.cursor()
+
+            #Insert sensor data into the table
+            print("Inserting data into database...")
+            query = "INSERT INTO sensor_entries (cpu, memory, disk, temp, humidity, pressure, uptime) VALUES (%s, %s, %s, %s, %s, %s, %s);"
+            values = (cpu, memory, disk, temperature, humidity, pressure, uptime)
+            cursor.execute(query, values)
+
+            #Commit and close connection
+            conn.commit()
+            print("Uploaded to Cloud SQL successfully")
+            cursor.close()
+            conn.close()
+
+        except Exception as e:
+            print(f"Error uploading data: {e}")
+
+        time.sleep(5)  #Upload data every 5 seconds
+
+#Start background thread for data upload
+threading.Thread(target=upload_to_cloud_sql, daemon=True).start()
+
 
 # Serve the index page for the game
 @app.route('/')
@@ -83,4 +154,4 @@ def get_uptime():
     return jsonify(uptime_info)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, threaded=True)
