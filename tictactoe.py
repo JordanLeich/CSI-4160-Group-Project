@@ -1,6 +1,7 @@
 from sense_hat import SenseHat
 from displaypretty import prettydisplay
 from stateofplayout import *
+from winout import sendWinInfo
 # app.py
 import time
 from flask import Flask, render_template,jsonify, request
@@ -153,6 +154,7 @@ def place_marker_route():
                 stats['ties'] += 1
 
             stats['games_played'] += 1
+            sendWinInfo(stats=stats)
             return jsonify({"status": "game_over", "message": f"{winner} wins!" if winner != 'Tie' else "It's a tie", "stats": stats})
 
         current_player = 'O'
@@ -169,6 +171,7 @@ def place_marker_route():
                 stats['ties'] += 1
 
             stats['games_played'] += 1
+            sendWinInfo(stats=stats)
             return jsonify({"status": "game_over", "message": f"{winner} wins!" if winner != 'Tie' else "It's a tie", "stats": stats})
 
         current_player = 'X'
