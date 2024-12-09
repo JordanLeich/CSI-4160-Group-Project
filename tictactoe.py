@@ -1,6 +1,7 @@
 from sense_hat import SenseHat
 from displaypretty import prettydisplay
 from stateofplayout import *
+
 from manager import upload_win_to_cloud_sql, regain_win_from_cloud
 # app.py
 import time
@@ -162,6 +163,7 @@ def place_marker_route():
 
             stats['games_played'] += 1
             upload_win_to_cloud_sql(stats=stats)
+
             return jsonify({"status": "game_over", "message": f"{winner} wins!" if winner != 'Tie' else "It's a tie", "stats": stats})
 
         current_player = 'O'
@@ -178,7 +180,9 @@ def place_marker_route():
                 stats['ties'] += 1
 
             stats['games_played'] += 1
+            
             upload_win_to_cloud_sql(stats=stats)
+
             return jsonify({"status": "game_over", "message": f"{winner} wins!" if winner != 'Tie' else "It's a tie", "stats": stats})
 
         current_player = 'X'
