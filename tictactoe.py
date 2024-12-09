@@ -150,22 +150,7 @@ def move_cursor():
     display_board()
     return jsonify({"status": "success"})
 
-'''
-stats = {
-    "X_wins": 0,
-    "O_wins": 0,
-    "AI_wins": 0,
-    "WINRATE_EASY_PLAYER": 0,
-    "WINRATE_EASY_AI":0,
-    "WINRATE_MID_PLAYER": 0,
-    "WINRATE_MID_AI":0,
-    "WINRATE_HARD_PLAYER": 0,
-    "WINRATE_HARD_AI":0,
-    "ties": 0,
-    "games_played": 0,
-    
-}
-'''
+
 
 @app.route('/place_marker', methods=['POST'])
 def place_marker_route():

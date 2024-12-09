@@ -67,6 +67,7 @@ def regain_win_from_cloud(stats):
     for table in cursor:
         if table == "WIN_LOSS_TBL":
             temp1 = False
+            print("table does exist")
     if temp1:
         #table does not exist, must create it now
         query = """CREATE TABLE WIN_LOSS_TBL (X_WINS INT, O_WINS INT, TIES INT , AI_wins INT, WINRATE_EASY_PLAYER INT, WINRATE_EASY_AI INT, WINRATE_MID_PLAYER INT, WINRATE_MID_AI INT, WINRATE_HARD_PLAYER INT, WINRATE_HARD_AI INT, GAMES_PLAYED INT, IPADDRESS VARCHAR2(255) PRIMARY KEY, WHEN_OCCUR TIMESTAMP)"""
@@ -148,7 +149,7 @@ def upload_win_to_cloud_sql(stats):
 
         conn = mysql.connector.connect(**DB_CONFIG)
         cursor = conn.cursor()
-        query = "SELECT X_WINS, O_WINS, TIES, AI_wins, games_played From WIN_LOSS_TBL WHERE IPADDRESS = " + My_IP
+        query = "SELECT * From WIN_LOSS_TBL WHERE IPADDRESS = " + My_IP
         cursor.execute(query)
         result = cursor.fetchall()
 
@@ -197,19 +198,19 @@ def upload_to_cloud_sql():
             print("Reading sensor data...")  # Check if this prints
             #Read sensor data
             cpu = psutil.cpu_percent(interval=1)
-            print(f"CPU: {cpu}")  #Testing purposes
+            #print(f"CPU: {cpu}")  #Testing purposes
             memory = psutil.virtual_memory().percent
-            print(f"Memory: {memory}")#Testing purposes
+            #print(f"Memory: {memory}")#Testing purposes
             disk = psutil.disk_usage('/').percent
-            print(f"Disk: {disk}")#Testing purposes
+            #print(f"Disk: {disk}")#Testing purposes
             temperature = sense.get_temperature()
-            print(f"Temperature: {temperature}")#Testing purposes
+            #print(f"Temperature: {temperature}")#Testing purposes
             humidity = sense.get_humidity()
-            print(f"Humidity: {humidity}")#Testing purposes
+            #print(f"Humidity: {humidity}")#Testing purposes
             pressure = sense.get_pressure()
-            print(f"Pressure: {pressure}")#Testing purposes
+            #print(f"Pressure: {pressure}")#Testing purposes
             uptime =  get_uptime_for_sql()
-            print(f"Uptime: {uptime}")#Testing purposes
+            #print(f"Uptime: {uptime}")#Testing purposes
             
 
             #Connect to the Cloud SQL database
