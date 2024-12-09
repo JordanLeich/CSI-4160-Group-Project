@@ -1,7 +1,8 @@
 from sense_hat import SenseHat
 from displaypretty import prettydisplay
 from stateofplayout import *
-from winout import sendWinInfo
+
+from manager import upload_win_to_cloud_sql, regain_win_from_cloud
 # app.py
 import time
 from flask import Flask, render_template,jsonify, request
@@ -29,6 +30,11 @@ stats = {
     "ties": 0,
     "games_played": 0
 }
+def regain_statistics():
+    global stats
+    temp_stats = regain_win_from_cloud
+    
+
 @app.route('/reset_game', methods=['POST'])
 def reset_game():
     global board, current_player, cursor,turnCounter
@@ -111,10 +117,12 @@ def set_difficulty():
 
 @app.route('/reset_stats', methods=['POST'])
 def reset_stats():
+    global stats
     stats['X_wins'] = 0
     stats['O_wins'] = 0
     stats['ties'] = 0
     stats['games_played'] = 0
+    regain_statistics()
     return jsonify({"status": "success", "stats": stats})
 
 @app.route('/move', methods=['POST'])
@@ -154,7 +162,8 @@ def place_marker_route():
                 stats['ties'] += 1
 
             stats['games_played'] += 1
-            sendWinInfo(stats=stats)
+            upload_win_to_cloud_sql(stats=stats)
+
             return jsonify({"status": "game_over", "message": f"{winner} wins!" if winner != 'Tie' else "It's a tie", "stats": stats})
 
         current_player = 'O'
@@ -171,7 +180,9 @@ def place_marker_route():
                 stats['ties'] += 1
 
             stats['games_played'] += 1
-            sendWinInfo(stats=stats)
+            
+            upload_win_to_cloud_sql(stats=stats)
+
             return jsonify({"status": "game_over", "message": f"{winner} wins!" if winner != 'Tie' else "It's a tie", "stats": stats})
 
         current_player = 'X'

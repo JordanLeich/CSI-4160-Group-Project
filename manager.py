@@ -1,10 +1,198 @@
+import datetime
+import socket
 from flask import Flask, render_template, jsonify
 import psutil
 from sense_hat import SenseHat
 import time
+import mysql.connector
+import threading
+
+'''
+stats = {
+    "X_wins": 0,
+    "O_wins": 0,
+    "AI_wins": 0,
+    "ties": 0,
+    "games_played": 0
+}
+'''
+#this is for sending win info to sql server
+My_hostname = socket.gethostname()
+My_IP = socket.gethostbyname(My_hostname)
 
 app = Flask(__name__)
 sense = SenseHat()
+
+DB_CONFIG = {
+    'user': 'root',
+    'password': 'csi4160project',
+    'host': '34.27.202.36', #public IP from your cloud SQL instance on GCP
+    'database': 'sensorvals'
+}
+
+
+'''
+table 2's config:
+CREATE TABLE WIN_LOSS_TBL (
+    X_WINS INT,
+    O_WINS INT,
+    TIES INT ,
+    AI_wins INT,
+    games_played INT,
+    IPADDRESS VARCHAR2(255) PRIMARY KEY,
+    WHEN_OCCUR TIMESTAMP
+);
+'''
+def regain_win_from_cloud(stats):
+    global My_IP
+    #here is where we get the query of what is contained in table2 for this ip and return that to tictactoe.py, where this is called from
+    conn = mysql.connector.connect(**DB_CONFIG)
+    cursor = conn.cursor()
+    cursor.execute("SHOW TABLES")
+    temp1 = True
+
+    for table in cursor:
+        if table == "WIN_LOSS_TBL":
+            temp1 = False
+    if temp1:
+        #table does not exist, must create it now
+        query = """CREATE TABLE WIN_LOSS_TBL (X_WINS INT, O_WINS INT, TIES INT, AI_wins INT, games_played INT, IPADDRESS VARCHAR2(255) PRIMARY KEY, WHEN_OCCUR TIMESTAMP)"""
+    query = "SELECT X_WINS, O_WINS, TIES, AI_wins, games_played From WIN_LOSS_TBL WHERE IPADDRESS = " + My_IP
+    cursor.execute(query)
+    result = cursor.fetchall()
+    if result.len() == 0:
+        #there is no results with my ip address, meaning we do not have any records from this pi
+        #we are done here
+        conn.commit()
+        print("Uploaded to Cloud SQL successfully")
+        cursor.close()
+        conn.close()
+        return stats
+    #there should not be more than one result due to ipaddress being a primary key
+    result_actual = result[0]
+    for x in range(5):
+        match x:
+            case 0:
+                #xwins
+                stats.update("X_wins", int(result_actual[x]))
+            case 1:
+                #owins
+                stats.update("O_wins", int(result_actual[x]))
+            case 2:
+                #Ties
+                stats.update("ties", int(result_actual[x]))
+            case 3:
+                #AI_wins
+                stats.update("AI_wins", int(result_actual[x]))
+            case 4:
+                #games_played
+                stats.update("games_played", int(result_actual[x]))
+    #we are done here
+    conn.commit()
+    print("Uploaded to Cloud SQL successfully")
+    cursor.close()
+    conn.close()
+    return stats
+
+def get_uptime_for_sql():
+    #Format for mysql database in "hh:mm:ss"
+    with open('/proc/uptime', 'r') as f:
+        uptime_seconds = int(float(f.readline().split()[0]))
+    hours = uptime_seconds // 3600
+    minutes = (uptime_seconds % 3600) // 60
+    seconds = uptime_seconds % 60
+    return f"{hours:02}:{minutes:02}:{seconds:02}"
+
+#for updating wins in cloud in table2
+def upload_win_to_cloud_sql(stats):
+    try:
+        global My_IP
+        #first we need to drop the column that contains the info from this IP, then we need to upload this data. 
+
+        conn = mysql.connector.connect(**DB_CONFIG)
+        cursor = conn.cursor()
+        query = "SELECT X_WINS, O_WINS, TIES, AI_wins, games_played From WIN_LOSS_TBL WHERE IPADDRESS = " + My_IP
+        cursor.execute(query)
+        result = cursor.fetchall()
+
+        if result.len() != 0:
+            #there is results with my ip address, meaning we do have any records from this pi
+            query = "DELETE FROM WIN_LOSS_TBL WHERE IPADDRESS = " + My_IP
+        #now we have no data up there, let's update it
+
+        X_WINS = stats.get("X_wins",0)
+        O_WINS = stats.get("O_wins",0)
+        TIES = stats.get("ties",0)
+        AI_wins = stats.get("AI_wins",0)
+        games_played = stats.get("games_played",0)
+        IPADDRESS = My_IP
+        WHEN_OCCUR = datetime.datetime.now()
+
+        query = "INSERT INTO WIN_LOSS_TBL (X_WINS, O_WINS, TIES, AI_wins, games_played, IPADDRESS, WHEN_OCCUR) VALUES (%s, %s, %s, %s, %s, %s, %s);"
+        values = (X_WINS, O_WINS, TIES, AI_wins, games_played, IPADDRESS, WHEN_OCCUR)
+        cursor.execute(query, values)
+    
+        #we are done here
+    
+        conn.commit()
+        print("Uploaded to Cloud SQL successfully")
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"Error uploading data: {e}")
+        upload_win_to_cloud_sql(stats)
+
+#Function to upload sensor data to Cloud SQL
+def upload_to_cloud_sql():
+    print("Thread started...") #Test to see if function is running
+    while True:
+        try:
+            print("Reading sensor data...")  # Check if this prints
+            #Read sensor data
+            cpu = psutil.cpu_percent(interval=1)
+            print(f"CPU: {cpu}")  #Testing purposes
+            memory = psutil.virtual_memory().percent
+            print(f"Memory: {memory}")#Testing purposes
+            disk = psutil.disk_usage('/').percent
+            print(f"Disk: {disk}")#Testing purposes
+            temperature = sense.get_temperature()
+            print(f"Temperature: {temperature}")#Testing purposes
+            humidity = sense.get_humidity()
+            print(f"Humidity: {humidity}")#Testing purposes
+            pressure = sense.get_pressure()
+            print(f"Pressure: {pressure}")#Testing purposes
+            uptime =  get_uptime_for_sql()
+            print(f"Uptime: {uptime}")#Testing purposes
+            
+
+            #Connect to the Cloud SQL database
+            #Test database connection
+            print("Attempting to connect to Cloud SQL...")
+            conn = mysql.connector.connect(**DB_CONFIG)
+            print("Connected to Cloud SQL")
+
+            cursor = conn.cursor()
+
+            #Insert sensor data into the table
+            print("Inserting data into database...")
+            query = "INSERT INTO sensor_entries (cpu, memory, disk, temp, humidity, pressure, uptime) VALUES (%s, %s, %s, %s, %s, %s, %s);"
+            values = (cpu, memory, disk, temperature, humidity, pressure, uptime)
+            cursor.execute(query, values)
+
+            #Commit and close connection
+            conn.commit()
+            print("Uploaded to Cloud SQL successfully")
+            cursor.close()
+            conn.close()
+
+        except Exception as e:
+            print(f"Error uploading data: {e}")
+
+        time.sleep(5)  #Upload data every 5 seconds
+
+#Start background thread for data upload
+threading.Thread(target=upload_to_cloud_sql, daemon=True).start()
+
 
 # Serve the index page for the game
 @app.route('/')
@@ -83,4 +271,4 @@ def get_uptime():
     return jsonify(uptime_info)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, threaded=True)
