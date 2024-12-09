@@ -27,8 +27,15 @@ stats = {
     "X_wins": 0,
     "O_wins": 0,
     "AI_wins": 0,
+    "WINRATE_EASY_PLAYER": 0,
+    "WINRATE_EASY_AI":0,
+    "WINRATE_MID_PLAYER": 0,
+    "WINRATE_MID_AI":0,
+    "WINRATE_HARD_PLAYER": 0,
+    "WINRATE_HARD_AI":0,
     "ties": 0,
-    "games_played": 0
+    "games_played": 0,
+    
 }
 def regain_statistics():
     global stats
@@ -143,6 +150,23 @@ def move_cursor():
     display_board()
     return jsonify({"status": "success"})
 
+'''
+stats = {
+    "X_wins": 0,
+    "O_wins": 0,
+    "AI_wins": 0,
+    "WINRATE_EASY_PLAYER": 0,
+    "WINRATE_EASY_AI":0,
+    "WINRATE_MID_PLAYER": 0,
+    "WINRATE_MID_AI":0,
+    "WINRATE_HARD_PLAYER": 0,
+    "WINRATE_HARD_AI":0,
+    "ties": 0,
+    "games_played": 0,
+    
+}
+'''
+
 @app.route('/place_marker', methods=['POST'])
 def place_marker_route():
     global current_player, turnCounter
@@ -156,8 +180,27 @@ def place_marker_route():
         if winner:
             if winner == 'X':
                 stats['X_wins'] += 1
+                match difficulty:
+                    case 0:
+                        stats["WINRATE_EASY_PLAYER"] += 1
+                    case 1:
+                        stats["WINRATE_MID_PLAYER"] += 1
+                    case 2:
+                        stats["WINRATE_HARD_PLAYER"] += 1
+                    case _:
+                        print("what's the difficulty, ask justin line 191")
             elif winner == 'O':
-                stats['O_wins'] += 1
+                stats["O_wins"] += 1
+                stats["AI_wins"] += 1
+                match difficulty:
+                    case 0:
+                        stats["WINRATE_EASY_AI"] += 1
+                    case 1:
+                        stats["WINRATE_MID_AI"] += 1
+                    case 2:
+                        stats["WINRATE_HARD_AI"] += 1
+                    case _:
+                        print("what's the difficulty, ask justin line 203")
             else:
                 stats['ties'] += 1
 
