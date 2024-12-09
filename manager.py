@@ -6,6 +6,43 @@ from sense_hat import SenseHat
 import time
 import mysql.connector
 import threading
+import mysql.connector
+import datetime
+
+DB_CONFIG = {
+    'user': 'root',
+    'password': 'csi4160project',
+    'host': '34.27.202.36',
+    'database': 'sensorvals'
+}
+
+def create_win_loss_table_if_not_exists():
+    conn = mysql.connector.connect(**DB_CONFIG)
+    cursor = conn.cursor()
+    query = """
+    CREATE TABLE IF NOT EXISTS WIN_LOSS_TBL (
+        X_WINS INT,
+        O_WINS INT,
+        TIES INT,
+        AI_wins INT,
+        WINRATE_EASY_PLAYER INT,
+        WINRATE_EASY_AI INT,
+        WINRATE_MID_PLAYER INT,
+        WINRATE_MID_AI INT,
+        WINRATE_HARD_PLAYER INT,
+        WINRATE_HARD_AI INT,
+        GAMES_PLAYED INT,
+        IPADDRESS VARCHAR(255) PRIMARY KEY,
+        WHEN_OCCUR TIMESTAMP
+    )
+    """
+    cursor.execute(query)
+    _ = cursor.fetchall()
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
 
 '''
 stats = {
@@ -56,79 +93,54 @@ CREATE TABLE WIN_LOSS_TBL (
     WHEN_OCCUR TIMESTAMP
 );
 '''
+
 def regain_win_from_cloud(stats):
     global My_IP
-    #here is where we get the query of what is contained in table2 for this ip and return that to tictactoe.py, where this is called from
+
+    create_win_loss_table_if_not_exists()
+
     conn = mysql.connector.connect(**DB_CONFIG)
     cursor = conn.cursor()
-    cursor.execute("SHOW TABLES")
-    temp1 = True
 
-    for table in cursor:
-        if table == "WIN_LOSS_TBL":
-            temp1 = False
-            print("table does exist")
-    if temp1:
-        #table does not exist, must create it now
-        query = """CREATE TABLE WIN_LOSS_TBL (X_WINS INT, O_WINS INT, TIES INT , AI_wins INT, WINRATE_EASY_PLAYER INT, WINRATE_EASY_AI INT, WINRATE_MID_PLAYER INT, WINRATE_MID_AI INT, WINRATE_HARD_PLAYER INT, WINRATE_HARD_AI INT, GAMES_PLAYED INT, IPADDRESS VARCHAR2(255) PRIMARY KEY, WHEN_OCCUR TIMESTAMP)"""
-    query = "SELECT X_WINS INT, O_WINS, TIES, AI_wins, WINRATE_EASY_PLAYER, WINRATE_EASY_AI, WINRATE_MID_PLAYER, WINRATE_MID_AI, WINRATE_HARD_PLAYER, WINRATE_HARD_AI, GAMES_PLAYED From WIN_LOSS_TBL WHERE IPADDRESS = " + My_IP
-    cursor.execute(query)
+    # Fetch any previous results before starting new queries
+    cursor.execute("SHOW TABLES")
+    _ = cursor.fetchall()
+
+    query = """
+    SELECT X_WINS, O_WINS, TIES, AI_wins, WINRATE_EASY_PLAYER, WINRATE_EASY_AI, 
+    WINRATE_MID_PLAYER, WINRATE_MID_AI, WINRATE_HARD_PLAYER, WINRATE_HARD_AI, 
+    GAMES_PLAYED FROM WIN_LOSS_TBL WHERE IPADDRESS = %s
+    """
+    cursor.execute(query, (My_IP,))
     result = cursor.fetchall()
-    if result.len() == 0:
-        #there is no results with my ip address, meaning we do not have any records from this pi
-        #we are done here
-        conn.commit()
+
+    if not result:
         print("downloaded Cloud SQL winrate successfully, none found")
         cursor.close()
         conn.close()
         return stats
-    #there should not be more than one result due to ipaddress being a primary key
+
+    # There should not be more than one result due to IPADDRESS being a primary key
     result_actual = result[0]
 
-    for x in range(12):
-        match x:
-            case 0:
-                #xwins
-                stats.update("X_wins", int(result_actual[x]))
-            case 1:
-                #owins
-                stats.update("O_wins", int(result_actual[x]))
-            case 2:
-                #Ties
-                stats.update("ties", int(result_actual[x]))
-            case 3:
-                #AI_wins
-                stats.update("AI_wins", int(result_actual[x]))
-            case 4:
-                #games_played
-                stats.update("WINRATE_EASY_PLAYER", int(result_actual[x]))
-            case 5:
-                #owins
-                stats.update("WINRATE_EASY_AI", int(result_actual[x]))
-            case 6:
-                #Ties
-                stats.update("WINRATE_MID_PLAYER", int(result_actual[x]))
-            case 7:
-                #AI_wins
-                stats.update("WINRATE_MID_AI", int(result_actual[x]))
-            case 8:
-                #games_played
-                stats.update("WINRATE_HARD_PLAYER", int(result_actual[x]))
-            case 9:
-                #owins
-                stats.update("WINRATE_HARD_AI", int(result_actual[x]))
-            case 10:
-                #Ties
-                stats.update("ties", int(result_actual[x]))
-            case 11:
-                #AI_wins
-                stats.update("AI_wins", int(result_actual[x]))
-    #we are done here
-    conn.commit()
+    # Ensure to match the indices with the actual number of selected columns
+    stats["X_wins"] = int(result_actual[0])
+    stats["O_wins"] = int(result_actual[1])
+    stats["ties"] = int(result_actual[2])
+    stats["AI_wins"] = int(result_actual[3])
+    stats["WINRATE_EASY_PLAYER"] = int(result_actual[4])
+    stats["WINRATE_EASY_AI"] = int(result_actual[5])
+    stats["WINRATE_MID_PLAYER"] = int(result_actual[6])
+    stats["WINRATE_MID_AI"] = int(result_actual[7])
+    stats["WINRATE_HARD_PLAYER"] = int(result_actual[8])
+    stats["WINRATE_HARD_AI"] = int(result_actual[9])
+    stats["games_played"] = int(result_actual[10])
+
     print("downloaded Cloud SQL winrate successfully")
     cursor.close()
     conn.close()
     return stats
+
 
 
 
@@ -141,55 +153,57 @@ def get_uptime_for_sql():
     seconds = uptime_seconds % 60
     return f"{hours:02}:{minutes:02}:{seconds:02}"
 
-#for updating wins in cloud in table2
+
 def upload_win_to_cloud_sql(stats):
     try:
         global My_IP
-        #first we need to drop the column that contains the info from this IP, then we need to upload this data. 
 
         print("1" + str(stats))
 
         conn = mysql.connector.connect(**DB_CONFIG)
         cursor = conn.cursor()
-        query = "SELECT * From WIN_LOSS_TBL WHERE IPADDRESS = \"" + My_IP + "\""
-        cursor.execute(query)
+        query = "SELECT * FROM WIN_LOSS_TBL WHERE IPADDRESS = %s"
+        cursor.execute(query, (My_IP,))
         result = cursor.fetchall()
 
         print("2")
-        
-        if result.len() != 0:
-            #there is results with my ip address, meaning we do have any records from this pi
-            query = "DELETE FROM WIN_LOSS_TBL WHERE IPADDRESS = \"" + My_IP + "\""
-            cursor.execute(query)
-        #now we have no data up there, let's update it
+
+        if len(result) != 0:
+            query = "DELETE FROM WIN_LOSS_TBL WHERE IPADDRESS = %s"
+            cursor.execute(query, (My_IP,))
+
         print(str(stats))
-        X_WINS = stats.get("X_wins",0)
-        O_WINS = stats.get("O_wins",0)
-        TIES = stats.get("ties",0)
-        AI_wins = stats.get("AI_wins",0)
-        games_played = stats.get("games_played",0)
-        WINRATE_EASY_PLAYER = stats.get("WINRATE_EASY_PLAYER",0)
-        WINRATE_EASY_AI = stats.get("WINRATE_EASY_AI",0)
-        WINRATE_MID_PLAYER = stats.get("WINRATE_MID_PLAYER",0)
-        WINRATE_MID_AI = stats.get("WINRATE_MID_AI",0)
-        WINRATE_HARD_PLAYER = stats.get("WINRATE_HARD_PLAYER",0)
-        WINRATE_HARD_AI = stats.get("WINRATE_HARD_AI",0)
-        IPADDRESS = "\"" + My_IP + "\""
+        X_WINS = stats.get("X_wins", 0)
+        O_WINS = stats.get("O_wins", 0)
+        TIES = stats.get("ties", 0)
+        AI_wins = stats.get("AI_wins", 0)
+        games_played = stats.get("games_played", 0)
+        WINRATE_EASY_PLAYER = stats.get("WINRATE_EASY_PLAYER", 0)
+        WINRATE_EASY_AI = stats.get("WINRATE_EASY_AI", 0)
+        WINRATE_MID_PLAYER = stats.get("WINRATE_MID_PLAYER", 0)
+        WINRATE_MID_AI = stats.get("WINRATE_MID_AI", 0)
+        WINRATE_HARD_PLAYER = stats.get("WINRATE_HARD_PLAYER", 0)
+        WINRATE_HARD_AI = stats.get("WINRATE_HARD_AI", 0)
         WHEN_OCCUR = datetime.datetime.now()
 
         print("3")
 
-        query = "INSERT INTO WIN_LOSS_TBL (X_WINS, O_WINS, TIES, AI_wins, WINRATE_EASY_PLAYER, WINRATE_EASY_AI, WINRATE_MID_PLAYER, WINRATE_MID_AI, WINRATE_HARD_PLAYER, WINRATE_HARD_AI, games_played, IPADDRESS, WHEN_OCCUR) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
-        values = (X_WINS, O_WINS, TIES,WINRATE_EASY_PLAYER, WINRATE_EASY_AI, WINRATE_MID_PLAYER, WINRATE_MID_AI, WINRATE_HARD_PLAYER, WINRATE_HARD_AI, AI_wins, games_played, IPADDRESS, WHEN_OCCUR)
+        query = """
+        INSERT INTO WIN_LOSS_TBL (X_WINS, O_WINS, TIES, AI_wins, WINRATE_EASY_PLAYER, 
+        WINRATE_EASY_AI, WINRATE_MID_PLAYER, WINRATE_MID_AI, WINRATE_HARD_PLAYER, 
+        WINRATE_HARD_AI, games_played, IPADDRESS, WHEN_OCCUR) 
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+        """
+        values = (X_WINS, O_WINS, TIES, AI_wins, WINRATE_EASY_PLAYER, WINRATE_EASY_AI, 
+                  WINRATE_MID_PLAYER, WINRATE_MID_AI, WINRATE_HARD_PLAYER, WINRATE_HARD_AI, 
+                  games_played, My_IP, WHEN_OCCUR)
+
         for x in values:
             print(str(x))
 
         cursor.execute(query, values)
-
         print("4")
 
-        #we are done here
-    
         conn.commit()
         print("Uploaded to Cloud SQL successfully")
         cursor.close()
@@ -197,6 +211,8 @@ def upload_win_to_cloud_sql(stats):
     except Exception as e:
         print(f"Error uploading data: {e}")
         upload_win_to_cloud_sql(stats)
+
+
 
 #Function to upload sensor data to Cloud SQL
 def upload_to_cloud_sql():

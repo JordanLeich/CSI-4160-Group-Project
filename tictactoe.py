@@ -39,7 +39,7 @@ stats = {
 }
 def regain_statistics():
     global stats
-    temp_stats = regain_win_from_cloud
+    stats = regain_win_from_cloud(stats)
     
 
 @app.route('/reset_game', methods=['POST'])
@@ -49,6 +49,7 @@ def reset_game():
     current_player = 'X'
     turnCounter = 0
     cursor = [0, 0]
+    regain_statistics()
     display_board()
 
 def display_board():
