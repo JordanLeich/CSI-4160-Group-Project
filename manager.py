@@ -157,7 +157,7 @@ def upload_win_to_cloud_sql(stats):
             query = "DELETE FROM WIN_LOSS_TBL WHERE IPADDRESS = " + My_IP
             cursor.execute(query)
         #now we have no data up there, let's update it
-
+        print(str(stats))
         X_WINS = stats.get("X_wins",0)
         O_WINS = stats.get("O_wins",0)
         TIES = stats.get("ties",0)
