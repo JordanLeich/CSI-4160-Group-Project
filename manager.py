@@ -147,15 +147,19 @@ def upload_win_to_cloud_sql(stats):
         global My_IP
         #first we need to drop the column that contains the info from this IP, then we need to upload this data. 
 
+        print("1" + str(stats))
+
         conn = mysql.connector.connect(**DB_CONFIG)
         cursor = conn.cursor()
-        query = "SELECT * From WIN_LOSS_TBL WHERE IPADDRESS = " + My_IP
+        query = "SELECT * From WIN_LOSS_TBL WHERE IPADDRESS = \"" + My_IP + "\""
         cursor.execute(query)
         result = cursor.fetchall()
 
+        print("2")
+        
         if result.len() != 0:
             #there is results with my ip address, meaning we do have any records from this pi
-            query = "DELETE FROM WIN_LOSS_TBL WHERE IPADDRESS = " + My_IP
+            query = "DELETE FROM WIN_LOSS_TBL WHERE IPADDRESS = \"" + My_IP + "\""
             cursor.execute(query)
         #now we have no data up there, let's update it
         print(str(stats))
@@ -170,8 +174,10 @@ def upload_win_to_cloud_sql(stats):
         WINRATE_MID_AI = stats.get("WINRATE_MID_AI",0)
         WINRATE_HARD_PLAYER = stats.get("WINRATE_HARD_PLAYER",0)
         WINRATE_HARD_AI = stats.get("WINRATE_HARD_AI",0)
-        IPADDRESS = My_IP
+        IPADDRESS = "\"" + My_IP + "\""
         WHEN_OCCUR = datetime.datetime.now()
+
+        print("3")
 
         query = "INSERT INTO WIN_LOSS_TBL (X_WINS, O_WINS, TIES, AI_wins, WINRATE_EASY_PLAYER, WINRATE_EASY_AI, WINRATE_MID_PLAYER, WINRATE_MID_AI, WINRATE_HARD_PLAYER, WINRATE_HARD_AI, games_played, IPADDRESS, WHEN_OCCUR) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
         values = (X_WINS, O_WINS, TIES,WINRATE_EASY_PLAYER, WINRATE_EASY_AI, WINRATE_MID_PLAYER, WINRATE_MID_AI, WINRATE_HARD_PLAYER, WINRATE_HARD_AI, AI_wins, games_played, IPADDRESS, WHEN_OCCUR)
@@ -179,7 +185,9 @@ def upload_win_to_cloud_sql(stats):
             print(str(x))
 
         cursor.execute(query, values)
-    
+
+        print("4")
+
         #we are done here
     
         conn.commit()
